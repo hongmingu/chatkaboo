@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+
+    <title>Laymei 환영합니다</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    {% load static from staticfiles %}
+    <!--jquery 3.3.1-->
+    <script src="{% static 'js/jquery-3.3.1.js' %}"></script>
+    <!--jquery-csrf-->
+    <script src="{% static 'js/jquery-csrf.js' %}"></script>
+
+    <!--bootstrap-->
+    <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap.css' %}">
+    <script src="{% static 'bootstrap/js/bootstrap.js' %}"></script>
+
+    <!-- recaptcha -->
+    <script src='https://www.google.com/recaptcha/api.js'></script>
+
+{% if user.is_authenticated %}
+<!--
+<meta http-equiv="refresh" content="5;url=http://www.homejjang.com/">
+-->
+
+{% else %}
+{% endif %}
+
+    <style>
+        @media screen and (max-width: 768px) {
+            /* 모바일에 사용될 스타일 시트를 여기에 작성합니다. */
+            .mobile_display_none {
+                display: none;
+            }
+            .mobile_display_block {
+                display: block;
+            }
+        }
+        @media screen and (min-width: 769px) {
+            .desktop_display_none {
+                display: none;
+            }
+            .desktop_display_block {
+                display: block;
+            }
+        }
+
+        .login-form {
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-offset-1 col-sm-10 col-md-offset-2 col-md-8">
+                <div style="position: relative; display: inline-block; vertical-align:top; margin-top: 20px; margin-bottom: 10px;">
+                    <div style="width: 40px; position: absolute;">
+                        <div style="padding-top: 100%; /* 1:1 ratio */ overflow: hidden; background-color: darkblue;">
+                        </div>
+                    </div>
+                    <div style="width: 20px; position: absolute;">
+                        <div style="padding-top: 100%; /* 1:1 ratio */ overflow: hidden; background-color: #f8ff15;
+                            -webkit-transform: translate(100%,100%) scale(0.75);
+                            -ms-transform: translate(100%,100%) scale(0.75);
+                            transform: translate(100%,100%) scale(0.75);">
+                        </div>
+                    </div>
+                </div>
+                <div style="padding-left: 45px; display: inline-block"><h1>Laymei</h1></div>
+
+
+            <div class="row">
+                <div class="col-sm-3"></div>
+                <div class="col-sm-9">
+                    <div class="row">
+                        <form method="post" action=".">
+                            {% csrf_token %}
+                            <div class="col-sm-5 form-group">
+                                {{ log_in_form.username }}
+                            </div>
+                            <div class="col-sm-5 form-group">
+                                {{ log_in_form.password }}
+                            </div>
+                            <div class="col-sm-2">
+                                <button type="submit" class="btn btn-default pull-right login-form" name="type" value="log_in" style="height: 34px;">Login</button>
+
+                                <p class="text-primary pull-right desktop_display_none" style="margin-right: 40px;font-size: 13px;padding-top: 8px;padding-bottom: 8px;margin-bottom: 0px;">forgot password</p>
+
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <p class="text-primary text-right mobile_display_none" style="margin-right: 100px;font-size: 12px;">forgot password</p>
+            </div>
+            <div class="row">
+                <div class="col-sm-7">
+                    <div class="mobile_display_none" style="height: 140px"></div>
+                    <div class="mobile_display_none" style="height: 70px"></div>
+                    <p>This site is for messaging</p>
+                    <p>You can talk with your friends and lay your message to your friends or other your followers</p>
+                </div>
+                <div class="col-sm-5">
+                    <div class="mobile_display_none" style="height: 140px"></div>
+
+                    <p class="h3">Register</p>
+                    <form method="post" action=".">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            {{ create_form.name }}
+                        </div>
+                        <div class="form-group">
+                            {{ create_form.username }}
+                        </div>
+                        <div class="form-group">
+                            {{ create_form.email }}
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-9">
+                                {% if clue %}
+                                    <p class="text-primary" style="word-wrap: break-word">{{ clue.message }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="col-xs-3">
+                                <button type="submit" class="btn btn-default pull-right" name="type" value="create_first">Submit</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+<script>
+    $(document).ready(function () {
+
+    });
+</script>
+</html>

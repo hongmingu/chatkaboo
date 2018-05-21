@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block contents %}
+    {% if user.userextension.status == 1010 %}
+        <!--USER_EXTENSION_USING_VERIFIED-->
+
+    {% elif user.userextension.status == 1020 %}
+        <!--USER_EXTENSION_USING_NOT_VERIFIED-->
+
+    {% elif user.userextension.status == 1021 %}
+        <!--USER_EXTENSION_USED_UNDER_30DAYS-->
+
+    {% elif user.userextension.status == 1022 %}
+        <!--USER_EXTENSION_USED_OVER_30DAYS-->
+
+    {% endif %}
+{% endblock %}
