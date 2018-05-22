@@ -35,7 +35,7 @@ class UserTextName(models.Model):
 class UserPrimaryEmail(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
 
-    email = models.EmailField(max_length=255, unique=True)
+    email = models.EmailField(max_length=255, unique=True, null=True, blank=True)
 
     verified = models.BooleanField(default=False)
 
@@ -78,7 +78,6 @@ class UserUnverifiedEmail(models.Model):
 
 class UserPrimaryEmailAuthToken(models.Model):
     user_primary_email = models.ForeignKey(UserPrimaryEmail, on_delete=models.CASCADE, null=True, blank=True)
-    user_unverified_email = models.ForeignKey(UserUnverifiedEmail, on_delete=models.CASCADE, null=True, blank=True)
     uid = models.CharField(max_length=64, unique=True)
     token = models.CharField(max_length=34, unique=True)
 

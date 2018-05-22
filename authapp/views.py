@@ -259,7 +259,6 @@ def main_create_log_in(request):
                             user=new_user_create,
                             email=new_email,
                             verified=False,
-                            primary=True,
                         )
 
                         new_user_username = UserUsername.objects.create(
@@ -388,31 +387,30 @@ def main_create_log_in(request):
         return render_login_create(request, 'authapp/main_first.html', None, LoginForm(), UserCreateForm())
 
 
-def email_key_confirm_for_primary(request, uid, token):
+def primary_email_key_confirm(request, uid, token):
     if request.method == "GET":
         try:
             with transaction.atomic():
                 try:
-                    user_primary_auth_token = UserPrimaryEmailAuthToken.objects.get(uid=uid, token=token)
+                    user_primary_email_auth_token = UserPrimaryEmailAuthToken.objects.get(uid=uid, token=token)
                 except UserPrimaryEmailAuthToken.DoesNotExist:
                     clue = {'message': texts.KEY_NOT_EXIST}
                     return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
 
-                if user_primary_auth_token is not None and not (
-                        (now() - user_primary_auth_token.created) <= timedelta(seconds=60 * 10)):
-                    user_primary_auth_token.delete()
+                if user_primary_email_auth_token is not None and not (
+                        (now() - user_primary_email_auth_token.created) <= timedelta(seconds=60 * 10)):
                     clue = {'message': texts.KEY_EXPIRED}
                     return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
 
                 try:
                     uid = force_text(urlsafe_base64_decode(uid))
                     user = User.objects.get(pk=uid)
-                    user_primary_email = user_primary_auth_token.user_primary_email
+                    user_primary_email = user_primary_email_auth_token.user_primary_email
                 except (TypeError, ValueError, OverflowError, User.DoesNotExist):
                     user = None
                     user_primary_email = None
 
-                if user is not None and user_primary_email is not None and user_primary_auth_token is not None \
+                if user is not None and user_primary_email is not None and user_primary_email_auth_token is not None \
                         and account_activation_token.check_token(user, token):
                     email = user_primary_email.email
                 else:
@@ -420,6 +418,7 @@ def email_key_confirm_for_primary(request, uid, token):
                     return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
                 # 만약 그 사이에 누군가 UserVerifiedEmail 등록해버렸다면 그 때 primary 이메일도 삭제할 것이므로 괜찮다.
                 # 결국 이 전에 return 되어 여기까지 오지도 않을 것이다.
+                #
 
                 user_primary_email.verified = True
                 user.is_active = True
@@ -435,6 +434,52 @@ def email_key_confirm_for_primary(request, uid, token):
             return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
 
 
+def unverified_email_key_confirm(request, uid, token):
+    if request.method == "GET":
+        try:
+            with transaction.atomic():
+                try:
+                    user_unverified_email_auth_token = UserUnverifiedEmailAuthToken.objects.get(uid=uid, token=token)
+                except UserPrimaryEmailAuthToken.DoesNotExist:
+                    clue = {'message': texts.KEY_NOT_EXIST}
+                    return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
+
+                if user_unverified_email_auth_token is not None and not (
+                        (now() - user_unverified_email_auth_token .created) <= timedelta(seconds=60 * 10)):
+                    clue = {'message': texts.KEY_EXPIRED}
+                    return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
+
+                try:
+                    uid = force_text(urlsafe_base64_decode(uid))
+                    user = User.objects.get(pk=uid)
+                    user_unverified_email = user_unverified_email_auth_token.user_unverified_email
+                except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+                    user = None
+                    user_unverified_email = None
+
+                if user is not None and user_unverified_email is not None and user_unverified_email_auth_token is not None \
+                        and account_activation_token.check_token(user, token):
+                    email = user_unverified_email_auth_token.email
+                else:
+                    clue = {'message': texts.KEY_EXPIRED}
+                    return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
+                # 만약 그 사이에 누군가 UserVerifiedEmail 등록해버렸다면 그 때 primary 이메일도 삭제할 것이므로 괜찮다.
+                # 결국 이 전에 return 되어 여기까지 오지도 않을 것이다.
+
+
+                .verified = True
+                user.is_active = True
+
+                UserUnverifiedEmail.objects.filter(Q(email=email)).delete()
+
+                user_primary_email.save()
+                user.save()
+                clue = {'message': texts.KEY_CONFIRM_SUCCESS}
+                return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
+        except Exception:
+            clue = {'message': texts.KEY_OVERALL_FAILED}
+            return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
+
 def log_out(request):
     if request.method == "POST":
         logout(request)
@@ -444,6 +489,7 @@ def log_out(request):
         return redirect(reverse('website:main'))
 
 
+@ensure_csrf_cookie
 def username_change(request):
     if request.method == "POST":
         if request.is_ajax():
@@ -479,7 +525,7 @@ def username_change(request):
 
 
 @ensure_csrf_cookie
-def email_add_key_send(request):
+def email_add_and_key_send(request):
     if request.method == 'POST':
         if request.is_ajax():
             if request.POST['email_to_add']:
@@ -557,7 +603,6 @@ def email_add_key_send(request):
                     return clue_json_response(0, texts.UNEXPECTED_ERROR)
 
 
-
 @ensure_csrf_cookie
 def unverified_email_key_send(request):
     if request.method == 'POST':
@@ -573,7 +618,6 @@ def unverified_email_key_send(request):
                             return clue_json_response(0, texts.EMAIL_NOT_EXIST)
 
                         if user_unverified_email is None:
-                            pass
                             return clue_json_response(0, texts.EMAIL_NOT_EXIST)
                         else:
                             user = request.user
@@ -626,9 +670,9 @@ def unverified_email_key_send(request):
                             )
 
                             return clue_json_response(1, texts.EMAIL_ADDED_SENT)
+
                 except Exception:
                     return clue_json_response(0, texts.UNEXPECTED_ERROR)
-
 
 
 @ensure_csrf_cookie
@@ -647,7 +691,6 @@ def primary_email_key_send(request):
                             return clue_json_response(0, texts.EMAIL_NOT_EXIST)
 
                         if user_primary_email is None:
-                            pass
                             return clue_json_response(0, texts.EMAIL_NOT_EXIST)
                         else:
                             user = request.user
@@ -703,69 +746,88 @@ def primary_email_key_send(request):
                 except Exception:
                     return clue_json_response(0, texts.UNEXPECTED_ERROR)
 
-def email_remove(request):
+
+def user_verified_email_delete(request):
     if request.method == "POST":
         if request.is_ajax():
-            target_email = request.POST['email']
-            if target_email is not None:
-                target_user_sub_email = None
+            if request.POST['email']:
                 try:
-                    target_user_sub_email = UserEmail.objects.get(user_extension=request.user.userextension,
-                                                                  email=target_email)
-                except UserEmail.DoesNotExist:
-                    pass
+                    with transaction.atomic():
 
-                if target_user_sub_email is not None:
-                    if target_user_sub_email.primary is True:
-                        result = None
-                        result['success'] = False
-                        result['message'] = texts.EMAIL_PRIMARY_CANNOT_BE_REMOVED
-                        return JsonResponse(result)
-                    else:
-                        target_user_sub_email.delete()
-                        result = None
-                        result['success'] = True
-                        result['message'] = texts.EMAIL_REMOVED
-                        return JsonResponse(result)
-
-
-def email_primary(request):
-    if request.method == "POST":
-        if request.is_ajax():
-            email = request.POST['email']
-            if email is not None:
-                user = request.user
-                user_extension = user.userextension
-                target_email = None
-                try:
-                    target_email = UserEmail.objects.get(email=email, user_extension=user_extension)
-                except UserEmail.DoesNotExist:
-                    pass
-
-                if target_email is not None:
-                    if target_email.primary is not True:
-                        user_sub_email_already_primary = None
+                        email = request.POST['email']
+                        # primary email cannot be removed
+                        user_primary_email_email = UserPrimaryEmail.objects.get(user=request.user).email
+                        if email == user_primary_email_email:
+                            return clue_json_response(0, texts.EMAIL_PRIMARY_CANNOT_BE_REMOVED)
                         try:
-                            user_sub_email_already_primary = UserEmail.objects.get(user_extension=user_extension,
-                                                                                   primary=True)
-                        except UserEmail.DoesNotExist:
-                            pass
-                        if user_sub_email_already_primary is not None:
-                            user_sub_email_already_primary.primary = False
-                            user_sub_email_already_primary.save()
+                            user_verified_email = UserVerifiedEmail.objects.get(user=request.user, email=email)
+                        except UserVerifiedEmail.DoesNotExist:
+                            user_verified_email = None
+                        if user_verified_email is not None:
+                            user_verified_email.delete()
+                            return clue_json_response(1, texts.EMAIL_DELETED)
+                except Exception:
+                    return clue_json_response(0, texts.UNEXPECTED_ERROR)
 
-                        target_email.primary = True
-                        target_email.save()
 
-                        result = None
-                        result['success'] = True
-                        result['message'] = texts.EMAIL_GET_PRIMARY
-                        return JsonResponse(result)
-                    else:
-                        result = None
-                        result['success'] = False
-                        result['message'] = texts.EMAIL_ALREADY_PRIMARY
-                        return JsonResponse(result)
+def user_unverified_email_delete(request):
+    if request.method == "POST":
+        if request.is_ajax():
+            if request.POST['email']:
+                try:
+                    with transaction.atomic():
+
+                        email = request.POST['email']
+                        # primary email cannot be removed
+                        user_primary_email_email = UserPrimaryEmail.objects.get(user=request.user).email
+                        if email == user_primary_email_email:
+                            return clue_json_response(0, texts.EMAIL_PRIMARY_CANNOT_BE_REMOVED)
+
+                        try:
+                            user_unverified_email = UserUnverifiedEmail.objects.get(user=request.user, email=email)
+                        except UserUnverifiedEmail.DoesNotExist:
+                            user_unverified_email = None
+
+                        if user_unverified_email is not None:
+                            user_unverified_email.delete()
+                            return clue_json_response(1, texts.EMAIL_DELETED)
+                except Exception:
+                    return clue_json_response(0, texts.UNEXPECTED_ERROR)
+
+
+def primary_email_from_verified_email(request):
+    if request.method == "POST":
+        if request.is_ajax():
+            if request.POST['email']:
+                try:
+                    with transaction.atomic():
+
+                        email = request.POST['email']
+
+                        user = request.user
+                        try:
+                            user_verified_email = UserVerifiedEmail.objects.get(email=email, user=user)
+                        except UserVerifiedEmail.DoesNotExist:
+                            user_verified_email = None
+
+                        if user_verified_email is not None:
+                            user_primary_email = UserPrimaryEmail.objects.get(user=user)
+                        else:
+                            return clue_json_response(0, texts.EMAIL_NOT_EXIST)
+
+                        if email is user_primary_email.email:
+                            return clue_json_response(0, texts.EMAIL_ALREADY_PRIMARY)
+
+                        user_primary_email.email = email
+                        user_primary_email.verified = True
+                        # 여기에서 한 것처럼 email을 지우기보단 null, blank 로 만들어준다. user_primary_email 이 없는 유저는 없도록.
+                        # confirm에서 확인하도록 하라.
+                        user_primary_email.save()
+
+                        return clue_json_response(1, texts.EMAIL_GET_PRIMARY)
+
+                except Exception:
+                    return clue_json_response(0, texts.UNEXPECTED_ERROR)
 
 
 def password_change(request):

@@ -20,7 +20,7 @@ EMAIL_SENT = 'email has sent, confirm your email'
 EMAIL_NOT_EXIST = 'There is no email like that'
 EMAIL_PRIMARY_CANNOT_BE_REMOVED = 'Primary email cannot be removed'
 EMAIL_CANNOT_SEND = 'cannot send confirmation to this email'
-EMAIL_REMOVED = 'email is removed'
+EMAIL_DELETED = 'email is removed'
 EMAIL_ALREADY_PRIMARY = 'email is already primary'
 EMAIL_GET_PRIMARY = 'email got primary'
 
