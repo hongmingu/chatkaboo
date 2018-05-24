@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 from django.conf import settings
-from authapp.models import UserUsername, UserEmail
+from authapp.models import UserUsername, UserPrimaryEmail
 
 
 class UserCreateForm(forms.ModelForm):
@@ -88,3 +88,16 @@ class PasswordCheckBeforeDeleteForm(forms.Form):
     class Meta:
         model = User
         fields = ['password']
+
+class PasswordChangeWithUserPKForm(forms.Form):
+    pk = forms.IntegerField(widget=forms.HiddenInput(
+        attrs={'class': 'form-control', 'placeholder': 'username(id)'}))
+    new_password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control',
+                                                                     'placeholder': 'new Password'}))
+    new_password_confirm = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control',
+                                                                             'placeholder': 'new Password confirm'}))
+
+    class Meta:
+        model = User
+        fields = ['pk', 'password']
+

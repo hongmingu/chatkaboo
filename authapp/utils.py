@@ -75,13 +75,23 @@ def password_failure_validate(username, password, password_confirm):
     return 0
 
 
-def render_login_create(request, template, clue_message, log_in_form, create_form):
+def render_with_clue_loginform_createform(request, template, clue_message, log_in_form, create_form):
     from django.shortcuts import render
     if clue_message is not None:
         clue = {'message': clue_message}
         return render(request, template, {'create_form': create_form, 'log_in_form': log_in_form, 'clue': clue})
     else:
         return render(request, template, {'create_form': create_form, 'log_in_form': log_in_form})
+
+
+def render_with_clue_one_form(request, template, clue_message, form):
+    from django.shortcuts import render
+    form = form
+    if clue_message is not None:
+        clue = {'message': clue_message}
+        return render(request, template, {'form': form, 'clue': clue})
+    else:
+        return render(request, template, {'form': form})
 
 
 def clue_json_response(clue_success, clue_message):

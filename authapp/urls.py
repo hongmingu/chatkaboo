@@ -4,8 +4,6 @@ from authapp import views
 app_name = 'authapp'
 
 urlpatterns = [
-    re_path(r'^test/$', views.test, name='test'),
-    re_path(r'^test2/$', views.test2, name='test2'),
 
     re_path(r'^$', views.accounts, name='accounts'),
 

@@ -137,23 +137,41 @@ def main_create_log_in(request):
             # Integrity UserEmail and UserUsername
 
             primary_email_exist = UserPrimaryEmail.objects.filter(email=email).exists()
-            verified_email_exist = UserVerifiedEmail.objects.filter(email=email).exists()
-            if primary_email_exist or verified_email_exist:
-                return render_login_create(request, 'authapp/main_first.html',
-                                           texts.EMAIL_ALREADY_USED, LoginForm(), UserCreateForm(data))
-            '''
-            try:
-                primary_email_exist = UserPrimaryEmail.objects.get(Q(email=email), Q(verified=True))
-                user_primary_email = UserPrimaryEmail.objects.get(Q(email=email), Q(verified=True))
-            except ObjectDoesNotExist:
-                pass
-            '''
-            username_exist = UserUsername.objects.filter(username=username).exists()
-            if username_exist:
-                return render_login_create(request, 'authapp/main_first.html',
-                                           texts.USERNAME_ALREADY_USED, LoginForm(), UserCreateForm(data))
+            if primary_email_exist:
+                return render_with_clue_loginform_createform(request, 'authapp/main_first.html',
+                                                             texts.EMAIL_ALREADY_USED, LoginForm(), UserCreateForm(data))
 
-            return render_login_create(request, 'authapp/main_first.html', None, LoginForm(), UserCreateForm(data))
+            email_failure = email_failure_validate(email)
+            if email_failure:
+                clue_message = None
+                if email_failure is 1:
+                    clue_message = texts.EMAIL_UNAVAILABLE
+                elif email_failure is 2:
+                    clue_message = texts.EMAIL_LENGTH_OVER_255
+                return clue_json_response(0, clue_message)
+
+
+            user_username_exist = UserUsername.objects.filter(username=username).exists()
+            if user_username_exist:
+                return render_with_clue_loginform_createform(request, 'authapp/main_first.html',
+                                                             texts.USERNAME_ALREADY_USED, LoginForm(), UserCreateForm(data))
+
+            username_failure = username_failure_validate(username)
+            if username_failure:
+                clue_message = None
+                if username_failure is 1:
+                    clue_message = texts.USERNAME_UNAVAILABLE
+                elif username_failure is 2:
+                    clue_message = texts.USERNAME_LENGTH_PROBLEM
+                elif username_failure is 3:
+                    clue_message = texts.USERNAME_8_CANNOT_DIGITS
+                elif username_failure is 4:
+                    clue_message = texts.USERNAME_BANNED
+
+                return clue_json_response(0, clue_message)
+
+
+            return render_with_clue_loginform_createform(request, 'authapp/main_first.html', None, LoginForm(), UserCreateForm(data))
 
             #######################################################################
 
@@ -174,17 +192,39 @@ def main_create_log_in(request):
 
             # validating username and password
 
-            primary_email_exist = UserPrimaryEmail.objects.filter(email=email).exists()
-            verified_email_exist = UserVerifiedEmail.objects.filter(email=email).exists()
-            if primary_email_exist or verified_email_exist:
-                return render_login_create(request, 'authapp/main_second.html',
-                                           texts.EMAIL_ALREADY_USED, LoginForm(), UserCreateForm(data))
+            user_username_exist = UserUsername.objects.filter(username=username).exists()
+            if user_username_exist:
+                return render_with_clue_loginform_createform(request, 'authapp/main_first.html',
+                                                             texts.USERNAME_ALREADY_USED, LoginForm(), UserCreateForm(data))
 
-            username_exist = UserUsername.objects.filter(username=username).exists()
-            if username_exist:
-                return render_login_create(request, 'authapp/main_second.html',
-                                           texts.USERNAME_ALREADY_USED, LoginForm(), UserCreateForm(data))
-            # regex check
+            username_failure = username_failure_validate(username)
+            if username_failure:
+                clue_message = None
+                if username_failure is 1:
+                    clue_message = texts.USERNAME_UNAVAILABLE
+                elif username_failure is 2:
+                    clue_message = texts.USERNAME_LENGTH_PROBLEM
+                elif username_failure is 3:
+                    clue_message = texts.USERNAME_8_CANNOT_DIGITS
+                elif username_failure is 4:
+                    clue_message = texts.USERNAME_BANNED
+
+                return clue_json_response(0, clue_message)
+
+            primary_email_exist = UserPrimaryEmail.objects.filter(email=email).exists()
+            if primary_email_exist:
+                return render_with_clue_loginform_createform(request, 'authapp/main_first.html',
+                                                             texts.EMAIL_ALREADY_USED, LoginForm(), UserCreateForm(data))
+
+            email_failure = email_failure_validate(email)
+            if email_failure:
+                clue_message = None
+                if email_failure is 1:
+                    clue_message = texts.EMAIL_UNAVAILABLE
+                elif email_failure is 2:
+                    clue_message = texts.EMAIL_LENGTH_OVER_255
+                return clue_json_response(0, clue_message)
+
 
             # password 조건
             password_failure = password_failure_validate(username, password, password_confirm)
@@ -198,8 +238,8 @@ def main_create_log_in(request):
                     clue_message = texts.PASSWORD_EQUAL_USERNAME
                 elif password_failure is 4:
                     clue_message = texts.PASSWORD_BANNED
-                return render_login_create(request, 'authapp/main_second.html', clue_message,
-                                           LoginForm(), UserCreateForm(data))
+                return render_with_clue_loginform_createform(request, 'authapp/main_second.html', clue_message,
+                                                             LoginForm(), UserCreateForm(data))
 
             # recaptcha part begin
 
@@ -215,8 +255,8 @@ def main_create_log_in(request):
             recaptcha_result = json.loads(recaptcha_response.read().decode())
 
             if not recaptcha_result['success']:
-                return render_login_create(request, 'authapp/main_second.html', texts.RECAPTCHA_CONFIRM_NEED,
-                                           LoginForm(), UserCreateForm(data))
+                return render_with_clue_loginform_createform(request, 'authapp/main_second.html', texts.RECAPTCHA_CONFIRM_NEED,
+                                                             LoginForm(), UserCreateForm(data))
 
             # Then, go to is_valid below
             if form.is_valid():
@@ -247,18 +287,17 @@ def main_create_log_in(request):
                                     if 'UNIQUE constraint' in str(e.args):
                                         counter_username = counter_username + 1
                                     else:
-                                        return render_login_create(request, 'authapp/main_second.html',
-                                                                   texts.CREATING_USER_EXTRA_ERROR, LoginForm(),
-                                                                   UserCreateForm(data))
+                                        return render_with_clue_loginform_createform(request, 'authapp/main_second.html',
+                                                                                     texts.CREATING_USER_EXTRA_ERROR, LoginForm(),
+                                                                                     UserCreateForm(data))
                             else:
-                                return render_login_create(request, 'authapp/main_second.html',
-                                                           texts.CREATING_USER_EXTRA_ERROR, LoginForm(),
-                                                           UserCreateForm(data))
+                                return render_with_clue_loginform_createform(request, 'authapp/main_second.html',
+                                                                             texts.CREATING_USER_EXTRA_ERROR, LoginForm(),
+                                                                             UserCreateForm(data))
 
                         new_user_primary_email_create = UserPrimaryEmail.objects.create(
                             user=new_user_create,
                             email=new_email,
-                            verified=False,
                         )
 
                         new_user_username = UserUsername.objects.create(
@@ -286,16 +325,16 @@ def main_create_log_in(request):
                                             user_primary_email=new_user_primary_email_create,
                                             uid=uid,
                                             token=token,
-                                            is_primary=True,
+                                            email=new_email,
                                         )
                                     checker_email_auth_token_result = 1
                                 except IntegrityError as e:
                                     if 'UNIQUE constraint' in str(e.args):
                                         counter_email_auth_token = counter_email_auth_token + 1
                                     else:
-                                        return render_login_create(request, 'authapp/main_second.html',
-                                                                   texts.EMAIL_CONFIRMATION_EXTRA_ERROR, LoginForm(),
-                                                                   UserCreateForm(data))
+                                        return render_with_clue_loginform_createform(request, 'authapp/main_second.html',
+                                                                                     texts.EMAIL_CONFIRMATION_EXTRA_ERROR, LoginForm(),
+                                                                                     UserCreateForm(data))
 
                         current_site = get_current_site(request)
                         subject = '[' + current_site.domain + ']' + texts.EMAIL_CONFIRMATION_SUBJECT
@@ -318,18 +357,18 @@ def main_create_log_in(request):
                         )
                 # End Transaction
                 except Exception:
-                    return render_login_create(request, 'authapp/main_second.html',
-                                               texts.CREATING_USER_OVERALL_ERROR, LoginForm(),
-                                               UserCreateForm(data))
+                    return render_with_clue_loginform_createform(request, 'authapp/main_second.html',
+                                                                 texts.CREATING_USER_OVERALL_ERROR, LoginForm(),
+                                                                 UserCreateForm(data))
 
                 login(request, new_user_create)
                 ####################################################
                 ####################################################
                 return redirect('/')
             else:
-                return render_login_create(request, 'authapp/main_second.html',
-                                           texts.CREATING_USER_OVERALL_ERROR, LoginForm(),
-                                           UserCreateForm(data))
+                return render_with_clue_loginform_createform(request, 'authapp/main_second.html',
+                                                             texts.CREATING_USER_OVERALL_ERROR, LoginForm(),
+                                                             UserCreateForm(data))
 
         elif request.POST['type'] == 'log_in':
 
@@ -348,9 +387,9 @@ def main_create_log_in(request):
                     pass
 
                 if user_email is None:
-                    return render_login_create(request, 'authapp/main_first.html',
-                                               texts.LOGIN_EMAIL_NOT_EXIST, LoginForm(data),
-                                               UserCreateForm(data))
+                    return render_with_clue_loginform_createform(request, 'authapp/main_first.html',
+                                                                 texts.LOGIN_EMAIL_NOT_EXIST, LoginForm(data),
+                                                                 UserCreateForm(data))
 
             else:
                 try:
@@ -359,126 +398,46 @@ def main_create_log_in(request):
                     pass
 
                 if user_username is None:
-                    return render_login_create(request, 'authapp/main_first.html',
-                                               texts.LOGIN_USERNAME_NOT_EXIST, LoginForm(data),
-                                               UserCreateForm())
+                    return render_with_clue_loginform_createform(request, 'authapp/main_first.html',
+                                                                 texts.LOGIN_USERNAME_NOT_EXIST, LoginForm(data),
+                                                                 UserCreateForm())
 
             if form.is_valid():
-                username = form.cleaned_data['username']
-                password = form.cleaned_data['password']
-                user = authenticate(username=username, password=password)
+                try:
+                    with transaction.atomic():
 
-                if user is not None:
+                        username = form.cleaned_data['username']
+                        password = form.cleaned_data['password']
+                        user = authenticate(username=username, password=password)
 
-                    login(request, user)
+                        if user is not None:
 
-                    ####################################################
-                    ####################################################
-                    return redirect(reverse('talk:main'))
-                else:
-                    data = {
-                        'username': username,
-                    }
-                    return render_login_create(request, 'authapp/main_first.html',
-                                               texts.LOGIN_FAILED, LoginForm(data),
-                                               UserCreateForm())
+                            login(request, user)
+
+                            if user.userdelete.is_deleted is True:
+                                user.userdelete.is_deleted = False
+                                user.userdelete.save()
+                            ####################################################
+                            ####################################################
+                            return redirect(reverse('talk:main'))
+
+                        else:
+                            data = {
+                                'username': username,
+                            }
+                            return render_with_clue_loginform_createform(request, 'authapp/main_first.html',
+                                                                         texts.LOGIN_FAILED, LoginForm(data),
+                                                                         UserCreateForm())
+                except Exception:
+                    return render_with_clue_loginform_createform(request, 'authapp/main_first.html',
+                                                                 texts.UNEXPECTED_ERROR, LoginForm(data),
+                                                                 UserCreateForm())
 
     else:
-        return render_login_create(request, 'authapp/main_first.html', None, LoginForm(), UserCreateForm())
+        return render_with_clue_loginform_createform(request, 'authapp/main_first.html', None, LoginForm(), UserCreateForm())
 
 
-def primary_email_key_confirm(request, uid, token):
-    if request.method == "GET":
-        try:
-            with transaction.atomic():
-                try:
-                    user_primary_email_auth_token = UserPrimaryEmailAuthToken.objects.get(uid=uid, token=token)
-                except UserPrimaryEmailAuthToken.DoesNotExist:
-                    clue = {'message': texts.KEY_NOT_EXIST}
-                    return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
 
-                if user_primary_email_auth_token is not None and not (
-                        (now() - user_primary_email_auth_token.created) <= timedelta(seconds=60 * 10)):
-                    clue = {'message': texts.KEY_EXPIRED}
-                    return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
-
-                try:
-                    uid = force_text(urlsafe_base64_decode(uid))
-                    user = User.objects.get(pk=uid)
-                    user_primary_email = user_primary_email_auth_token.user_primary_email
-                except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-                    user = None
-                    user_primary_email = None
-
-                if user is not None and user_primary_email is not None and user_primary_email_auth_token is not None \
-                        and account_activation_token.check_token(user, token):
-                    email = user_primary_email.email
-                else:
-                    clue = {'message': texts.KEY_EXPIRED}
-                    return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
-                # 만약 그 사이에 누군가 UserVerifiedEmail 등록해버렸다면 그 때 primary 이메일도 삭제할 것이므로 괜찮다.
-                # 결국 이 전에 return 되어 여기까지 오지도 않을 것이다.
-                #
-
-                user_primary_email.verified = True
-                user.is_active = True
-
-                UserUnverifiedEmail.objects.filter(Q(email=email)).delete()
-
-                user_primary_email.save()
-                user.save()
-                clue = {'message': texts.KEY_CONFIRM_SUCCESS}
-                return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
-        except Exception:
-            clue = {'message': texts.KEY_OVERALL_FAILED}
-            return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
-
-
-def unverified_email_key_confirm(request, uid, token):
-    if request.method == "GET":
-        try:
-            with transaction.atomic():
-                try:
-                    user_unverified_email_auth_token = UserUnverifiedEmailAuthToken.objects.get(uid=uid, token=token)
-                except UserPrimaryEmailAuthToken.DoesNotExist:
-                    clue = {'message': texts.KEY_NOT_EXIST}
-                    return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
-
-                if user_unverified_email_auth_token is not None and not (
-                        (now() - user_unverified_email_auth_token .created) <= timedelta(seconds=60 * 10)):
-                    clue = {'message': texts.KEY_EXPIRED}
-                    return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
-
-                try:
-                    uid = force_text(urlsafe_base64_decode(uid))
-                    user = User.objects.get(pk=uid)
-                    user_unverified_email = user_unverified_email_auth_token.user_unverified_email
-                except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-                    user = None
-                    user_unverified_email = None
-
-                if user is not None and user_unverified_email is not None and user_unverified_email_auth_token is not None \
-                        and account_activation_token.check_token(user, token):
-                    email = user_unverified_email_auth_token.email
-                else:
-                    clue = {'message': texts.KEY_EXPIRED}
-                    return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
-                # 만약 그 사이에 누군가 UserVerifiedEmail 등록해버렸다면 그 때 primary 이메일도 삭제할 것이므로 괜찮다.
-                # 결국 이 전에 return 되어 여기까지 오지도 않을 것이다.
-
-
-                .verified = True
-                user.is_active = True
-
-                UserUnverifiedEmail.objects.filter(Q(email=email)).delete()
-
-                user_primary_email.save()
-                user.save()
-                clue = {'message': texts.KEY_CONFIRM_SUCCESS}
-                return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
-        except Exception:
-            clue = {'message': texts.KEY_OVERALL_FAILED}
-            return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
 
 def log_out(request):
     if request.method == "POST":
@@ -523,153 +482,69 @@ def username_change(request):
                 except Exception:
                     return clue_json_response(0, texts.UNEXPECTED_ERROR)
 
-
 @ensure_csrf_cookie
-def email_add_and_key_send(request):
-    if request.method == 'POST':
+def primary_email_change(request):
+    if request.method == "POST":
         if request.is_ajax():
-            if request.POST['email_to_add']:
+            if request.POST['email']:
                 try:
                     with transaction.atomic():
-                        new_email = request.POST['email_to_add']
 
-                        verified_email_exist = UserVerifiedEmail.objects.filter(email=new_email).exists()
-                        primary_verified_email_exist = UserPrimaryEmail.objects.filter(Q(email=new_email),
-                                                                                       Q(verified=True))
-                        if verified_email_exist or primary_verified_email_exist:
+                        new_email = request.POST['email']
+
+                        user_primary_email_exists = UserPrimaryEmail.objects.filter(Q(email=new_email)).exists()
+                        if user_primary_email_exists:
                             return clue_json_response(0, texts.EMAIL_ALREADY_USED)
 
-                        email_validator = email_failure_validate(new_email)
-                        if email_validator:
-                            if email_validator is 1:
-                                return clue_json_response(0, texts.EMAIL_LENGTH_OVER_255)
-                            elif email_validator is 2:
-                                return clue_json_response(0, texts.EMAIL_UNAVAILABLE)
-
-                        # Now start the registering
                         user = request.user
 
-                        new_user_unverified_email = UserUnverifiedEmail.objects.create(
-                            user=user,
-                            email=new_email,
-                        )
-
-                        checker_email_auth_token_result = None
-                        counter_email_auth_token = None
+                        checker_while_loop = None
+                        counter_if_loop = None
                         uid = None
                         token = None
-
-                        while checker_email_auth_token_result is None:
-                            if counter_email_auth_token <= 9:
+                        while checker_while_loop is None:
+                            if counter_if_loop <= 9:
 
                                 try:
                                     uid = urlsafe_base64_encode(force_bytes(user.pk))
                                     token = account_activation_token.make_token(user)
-                                    if not UserUnverifiedEmailAuthToken.objects.filter(uid=uid, token=token).exists():
-                                        UserUnverifiedEmailAuthToken.objects.create(
-                                            user_unverified_email=new_user_unverified_email,
+
+                                    if not UserPrimaryEmailAuthToken.objects.filter(uid=uid, token=token).exists():
+                                        UserPrimaryEmailAuthToken.objects.create(
+                                            user_primary_email=user.userprimaryemail,
                                             uid=uid,
                                             token=token,
+                                            email=new_email,
                                         )
-                                    checker_email_auth_token_result = 1
+                                    checker_while_loop = 1
                                 except IntegrityError as e:
                                     if 'UNIQUE constraint' in str(e.args):
-                                        counter_email_auth_token = counter_email_auth_token + 1
+                                        counter_if_loop = counter_if_loop + 1
                                     else:
-                                        return clue_json_response(0, texts.CREATING_EMAIL_EXTRA_ERROR)
+                                        return render_with_clue_one_form(request, 'authapp/password_reset.html',
+                                                                         texts.UNEXPECTED_ERROR, PasswordResetForm())
 
+                        # Send Email
                         current_site = get_current_site(request)
-                        subject = '[' + current_site.domain + ']' + texts.EMAIL_CONFIRMATION_SUBJECT
 
-                        message = render_to_string('authapp/account_activation_email.html', {
+                        subject = '[' + current_site.domain + ']' + texts.EMAIL_CONFIRMATION_SUBJECT
+                        message = render_to_string('authapp/_user_password_reset_key.html', {
                             'username': user.userusername.username,
                             'name': user.usertextname.name,
-                            'email': new_user_unverified_email.email,
+                            'email': new_email,
                             'domain': current_site.domain,
                             'uid': uid,
                             'token': token,
                         })
 
-                        # Here needs variable of form.cleaned_data['email']?
-                        new_user_email_list = [new_email]
+                        email_list = [new_email]
 
                         send_mail(
                             subject=subject, message=message, from_email=options.DEFAULT_FROM_EMAIL,
-                            recipient_list=new_user_email_list
+                            recipient_list=email_list
                         )
 
                         return clue_json_response(1, texts.EMAIL_ADDED_SENT)
-                except Exception:
-                    return clue_json_response(0, texts.UNEXPECTED_ERROR)
-
-
-@ensure_csrf_cookie
-def unverified_email_key_send(request):
-    if request.method == 'POST':
-        if request.is_ajax():
-            if request.POST['email']:
-                try:
-                    with transaction.atomic():
-                        email = request.POST['email']
-
-                        try:
-                            user_unverified_email = UserUnverifiedEmail.objects.get(email=email, user=request.user)
-                        except UserUnverifiedEmail.DoesNotExist:
-                            return clue_json_response(0, texts.EMAIL_NOT_EXIST)
-
-                        if user_unverified_email is None:
-                            return clue_json_response(0, texts.EMAIL_NOT_EXIST)
-                        else:
-                            user = request.user
-
-                            # Start to make token
-                            checker_email_auth_token_result = None
-                            counter_email_auth_token = None
-                            uid = None
-                            token = None
-
-                            while checker_email_auth_token_result is None:
-                                if counter_email_auth_token <= 9:
-
-                                    try:
-                                        uid = urlsafe_base64_encode(force_bytes(user.pk))
-                                        token = account_activation_token.make_token(user)
-
-                                        if not UserUnverifiedEmailAuthToken.objects.filter(uid=uid,
-                                                                                           token=token).exists():
-                                            UserUnverifiedEmailAuthToken.objects.create(
-                                                user_unverified_email=user_unverified_email,
-                                                uid=uid,
-                                                token=token,
-                                            )
-                                        checker_email_auth_token_result = 1
-                                    except IntegrityError as e:
-                                        if 'UNIQUE constraint' in str(e.args):
-                                            counter_email_auth_token = counter_email_auth_token + 1
-                                        else:
-                                            return clue_json_response(0, texts.CREATING_EMAIL_EXTRA_ERROR)
-
-                            # Send Email
-                            current_site = get_current_site(request)
-
-                            subject = '[' + current_site.domain + ']' + texts.EMAIL_CONFIRMATION_SUBJECT
-                            message = render_to_string('authapp/_user_unverified_email_key.html', {
-                                'username': user.userusername.username,
-                                'name': user.usertextname.name,
-                                'email': user_unverified_email.email,
-                                'domain': current_site.domain,
-                                'uid': uid,
-                                'token': token,
-                            })
-
-                            email_list = [email]
-
-                            send_mail(
-                                subject=subject, message=message, from_email=options.DEFAULT_FROM_EMAIL,
-                                recipient_list=email_list
-                            )
-
-                            return clue_json_response(1, texts.EMAIL_ADDED_SENT)
 
                 except Exception:
                     return clue_json_response(0, texts.UNEXPECTED_ERROR)
@@ -687,147 +562,108 @@ def primary_email_key_send(request):
 
                         try:
                             user_primary_email = UserPrimaryEmail.objects.get(email=email, user=request.user)
-                        except UserUnverifiedEmail.DoesNotExist:
+                        except UserPrimaryEmail.DoesNotExist:
                             return clue_json_response(0, texts.EMAIL_NOT_EXIST)
-
-                        if user_primary_email is None:
-                            return clue_json_response(0, texts.EMAIL_NOT_EXIST)
-                        else:
-                            user = request.user
-
-                            # Start to make token
-                            checker_email_auth_token_result = None
-                            counter_email_auth_token = None
-                            uid = None
-                            token = None
-
-                            while checker_email_auth_token_result is None:
-                                if counter_email_auth_token <= 9:
-
-                                    try:
-                                        uid = urlsafe_base64_encode(force_bytes(user.pk))
-                                        token = account_activation_token.make_token(user)
-
-                                        if not UserPrimaryEmailAuthToken.objects.filter(uid=uid, token=token).exists():
-                                            UserPrimaryEmailAuthToken.objects.create(
-                                                user_unverified_email=user_primary_email,
-                                                uid=uid,
-                                                token=token,
-                                            )
-                                        checker_email_auth_token_result = 1
-                                    except IntegrityError as e:
-                                        if 'UNIQUE constraint' in str(e.args):
-                                            counter_email_auth_token = counter_email_auth_token + 1
-                                        else:
-                                            return clue_json_response(0, texts.CREATING_EMAIL_EXTRA_ERROR)
-
-                            # Send Email
-                            current_site = get_current_site(request)
-
-                            subject = '[' + current_site.domain + ']' + texts.EMAIL_CONFIRMATION_SUBJECT
-                            message = render_to_string('authapp/_user_primary_email_key.html', {
-                                'username': user.userusername.username,
-                                'name': user.usertextname.name,
-                                'email': user_primary_email.email,
-                                'domain': current_site.domain,
-                                'uid': uid,
-                                'token': token,
-                            })
-
-                            email_list = [email]
-
-                            send_mail(
-                                subject=subject, message=message, from_email=options.DEFAULT_FROM_EMAIL,
-                                recipient_list=email_list
-                            )
-
-                            return clue_json_response(1, texts.EMAIL_ADDED_SENT)
-
-                except Exception:
-                    return clue_json_response(0, texts.UNEXPECTED_ERROR)
-
-
-def user_verified_email_delete(request):
-    if request.method == "POST":
-        if request.is_ajax():
-            if request.POST['email']:
-                try:
-                    with transaction.atomic():
-
-                        email = request.POST['email']
-                        # primary email cannot be removed
-                        user_primary_email_email = UserPrimaryEmail.objects.get(user=request.user).email
-                        if email == user_primary_email_email:
-                            return clue_json_response(0, texts.EMAIL_PRIMARY_CANNOT_BE_REMOVED)
-                        try:
-                            user_verified_email = UserVerifiedEmail.objects.get(user=request.user, email=email)
-                        except UserVerifiedEmail.DoesNotExist:
-                            user_verified_email = None
-                        if user_verified_email is not None:
-                            user_verified_email.delete()
-                            return clue_json_response(1, texts.EMAIL_DELETED)
-                except Exception:
-                    return clue_json_response(0, texts.UNEXPECTED_ERROR)
-
-
-def user_unverified_email_delete(request):
-    if request.method == "POST":
-        if request.is_ajax():
-            if request.POST['email']:
-                try:
-                    with transaction.atomic():
-
-                        email = request.POST['email']
-                        # primary email cannot be removed
-                        user_primary_email_email = UserPrimaryEmail.objects.get(user=request.user).email
-                        if email == user_primary_email_email:
-                            return clue_json_response(0, texts.EMAIL_PRIMARY_CANNOT_BE_REMOVED)
-
-                        try:
-                            user_unverified_email = UserUnverifiedEmail.objects.get(user=request.user, email=email)
-                        except UserUnverifiedEmail.DoesNotExist:
-                            user_unverified_email = None
-
-                        if user_unverified_email is not None:
-                            user_unverified_email.delete()
-                            return clue_json_response(1, texts.EMAIL_DELETED)
-                except Exception:
-                    return clue_json_response(0, texts.UNEXPECTED_ERROR)
-
-
-def primary_email_from_verified_email(request):
-    if request.method == "POST":
-        if request.is_ajax():
-            if request.POST['email']:
-                try:
-                    with transaction.atomic():
-
-                        email = request.POST['email']
 
                         user = request.user
-                        try:
-                            user_verified_email = UserVerifiedEmail.objects.get(email=email, user=user)
-                        except UserVerifiedEmail.DoesNotExist:
-                            user_verified_email = None
 
-                        if user_verified_email is not None:
-                            user_primary_email = UserPrimaryEmail.objects.get(user=user)
-                        else:
-                            return clue_json_response(0, texts.EMAIL_NOT_EXIST)
+                        # Start to make token
+                        checker_email_auth_token_result = None
+                        counter_email_auth_token = None
+                        uid = None
+                        token = None
 
-                        if email is user_primary_email.email:
-                            return clue_json_response(0, texts.EMAIL_ALREADY_PRIMARY)
+                        while checker_email_auth_token_result is None:
+                            if counter_email_auth_token <= 9:
 
-                        user_primary_email.email = email
-                        user_primary_email.verified = True
-                        # 여기에서 한 것처럼 email을 지우기보단 null, blank 로 만들어준다. user_primary_email 이 없는 유저는 없도록.
-                        # confirm에서 확인하도록 하라.
-                        user_primary_email.save()
+                                try:
+                                    uid = urlsafe_base64_encode(force_bytes(user.pk))
+                                    token = account_activation_token.make_token(user)
 
-                        return clue_json_response(1, texts.EMAIL_GET_PRIMARY)
+                                    if not UserPrimaryEmailAuthToken.objects.filter(uid=uid, token=token).exists():
+                                        UserPrimaryEmailAuthToken.objects.create(
+                                            user_unverified_email=user_primary_email,
+                                            uid=uid,
+                                            token=token,
+                                        )
+                                    checker_email_auth_token_result = 1
+                                except IntegrityError as e:
+                                    if 'UNIQUE constraint' in str(e.args):
+                                        counter_email_auth_token = counter_email_auth_token + 1
+                                    else:
+                                        return clue_json_response(0, texts.CREATING_EMAIL_EXTRA_ERROR)
+
+                        # Send Email
+                        current_site = get_current_site(request)
+
+                        subject = '[' + current_site.domain + ']' + texts.EMAIL_CONFIRMATION_SUBJECT
+                        message = render_to_string('authapp/_user_primary_email_key.html', {
+                            'username': user.userusername.username,
+                            'name': user.usertextname.name,
+                            'email': user_primary_email.email,
+                            'domain': current_site.domain,
+                            'uid': uid,
+                            'token': token,
+                        })
+
+                        email_list = [email]
+
+                        send_mail(
+                            subject=subject, message=message, from_email=options.DEFAULT_FROM_EMAIL,
+                            recipient_list=email_list
+                        )
+
+                        return clue_json_response(1, texts.EMAIL_ADDED_SENT)
 
                 except Exception:
                     return clue_json_response(0, texts.UNEXPECTED_ERROR)
+
+
+def primary_email_key_confirm(request, uid, token):
+    if request.method == "GET":
+        try:
+            with transaction.atomic():
+                try:
+                    user_primary_email_auth_token = UserPrimaryEmailAuthToken.objects.get(uid=uid, token=token)
+                except UserPrimaryEmailAuthToken.DoesNotExist:
+                    clue = {'message': texts.KEY_NOT_EXIST}
+                    return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
+
+                if not (user_primary_email_auth_token is not None
+                        and not ((now() - user_primary_email_auth_token.created) <= timedelta(seconds=60 * 10))
+                        and (UserPrimaryEmailAuthToken.objects.filter(
+                            user_primary_email=user_primary_email_auth_token.user_primary_email
+                        ).first() == user_primary_email_auth_token)):
+                    clue = {'message': texts.KEY_EXPIRED}
+                    return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
+
+                try:
+                    uid = force_text(urlsafe_base64_decode(uid))
+                    user = User.objects.get(pk=uid)
+                    user_primary_email = user_primary_email_auth_token.user_primary_email
+                except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+                    user = None
+                    user_primary_email = None
+
+                if not (user is not None and user_primary_email is not None
+                        and user_primary_email_auth_token is not None
+                        and account_activation_token.check_token(user, token)):
+                    clue = {'message': texts.KEY_EXPIRED}
+                    return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
+
+                # 만약 그 사이에 누군가 UserVerifiedEmail 등록해버렸다면 그 때 primary 이메일도 삭제할 것이므로 괜찮다.
+                # 결국 이 전에 return 되어 여기까지 오지도 않을 것이다.
+                user_primary_email.email = user_primary_email_auth_token.email
+                user.is_active = True
+                user_primary_email.save()
+
+                user.save()
+
+                clue = {'message': texts.KEY_CONFIRM_SUCCESS}
+                return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
+        except Exception:
+            clue = {'message': texts.KEY_OVERALL_FAILED}
+            return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
 
 
 def password_change(request):
@@ -837,45 +673,40 @@ def password_change(request):
             username = request.user.userusername.username
             user = authenticate(username=username, password=form.cleaned_data['password'])
             if user is not None:
-                new_password = form.cleaned_data['new_password']
-                new_password_confirm = form.cleaned_data['new_password_confirm']
-                # password 조건
-                if not new_password == new_password_confirm:
-                    form = PasswordChangeForm()
-                    clue = None
-                    clue['message'] = texts.PASSWORD_NOT_THE_SAME
-                    return render(request, 'authapp/password_check.html', {'form': form, 'clue': clue})
+                try:
+                    with transaction.atomic():
+                        new_password = form.cleaned_data['new_password']
+                        new_password_confirm = form.cleaned_data['new_password_confirm']
+                        # password 조건
+                        # password 조건
+                        password_failure = password_failure_validate(username, new_password, new_password_confirm)
+                        if password_failure:
+                            clue_message = None
+                            if password_failure is 1:
+                                clue_message = texts.PASSWORD_NOT_THE_SAME
+                            elif password_failure is 2:
+                                clue_message = texts.PASSWORD_LENGTH_PROBLEM
+                            elif password_failure is 3:
+                                clue_message = texts.PASSWORD_EQUAL_USERNAME
+                            elif password_failure is 4:
+                                clue_message = texts.PASSWORD_BANNED
+                            return render_with_clue_one_form(request, 'authapp/password_check.html',
+                                                             clue_message, PasswordChangeForm())
 
-                if len(new_password) > 128 or len(new_password) < 6:
-                    clue = None
-                    clue['message'] = texts.PASSWORD_LENGTH_PROBLEM
-                    form = PasswordChangeForm()
-                    return render(request, 'authapp/password_check.html', {'form': form, 'clue': clue})
-                if username == new_password:
-                    clue = None
-                    clue['message'] = texts.PASSWORD_EQUAL_USERNAME
-                    form = PasswordChangeForm()
-                    return render(request, 'authapp/password_check.html', {'form': form, 'clue': clue})
+                        user.password = new_password
+                        user.save()
+                        return render_with_clue_one_form(request, 'authapp/password_check.html', texts.PASSWORD_CHANGED,
+                                                         PasswordChangeForm())
+                except Exception:
+                    return render_with_clue_one_form(request, 'authapp/password_check.html', texts.UNEXPECTED_ERROR,
+                                                     PasswordChangeForm())
 
-                user.password = new_password
-                user.save()
-
-                return render(request, 'authapp/password_changed.html')
             else:
-                form = PasswordChangeForm()
-                clue = None
-                clue['message'] = texts.PASSWORD_AUTH_FAILED
-                return render(request, 'authapp/password_check.html', {'form': form, 'clue': clue})
-
+                return render_with_clue_one_form(request, 'authapp/password_check.html', texts.PASSWORD_AUTH_FAILED, PasswordChangeForm())
         else:
-            form = PasswordChangeForm()
-            clue = None
-            clue['message'] = texts.PASSWORD_AUTH_FAILED
-            return render(request, 'authapp/password_check.html', {'form': form, 'clue': clue})
-
+            return render_with_clue_one_form(request, 'authapp/password_check.html', texts.PASSWORD_AUTH_FAILED, PasswordChangeForm())
     else:
-        form = PasswordChangeForm()
-        return render(request, 'authapp/password_check.html', {'form': form})
+        return render_with_clue_one_form(request, 'authapp/password_check.html', None, PasswordChangeForm())
 
 
 def password_reset(request):
@@ -892,256 +723,172 @@ def password_reset(request):
         recaptcha_result = json.loads(recaptcha_response.read().decode())
 
         if not recaptcha_result['success']:
-            clue = None
-            clue['message'] = texts.RECAPTCHA_CONFIRM_NEED
-            return render(request, 'authapp/password_reset.html', {'clue': clue})
+            return render_with_clue_one_form(request, 'authapp/password_reset.html', texts.RECAPTCHA_CONFIRM_NEED, PasswordResetForm())
 
         form = PasswordResetForm(request.POST)
 
         username = form.data['username']
-        user_email = None
-        user_username = None
         if '@' in username:
             try:
-                user_email = UserEmail.objects.get(Q(email=username), Q(primary=True) | Q(verified=True))
-            except UserEmail.DoesNotExist:
-                pass
-
-            if user_email is not None:
-                user = user_email.user_extension
-                user = user.user
-
-                uid = None
-                token = None
-                check_token_result = None
-
-                while check_token_result is None:
-                    try:
-                        uid = urlsafe_base64_encode(force_bytes(user.pk))
-                        token = account_activation_token.make_token(user)
-                        if not UserPasswordAuthToken.objects.filter(uid=uid, token=token).exists():
-                            UserPasswordAuthToken.objects.create(
-                                email=user_email,
-                                uid=uid,
-                                token=token,
-                            )
-                        check_token_result = 1
-                    except IntegrityError as e:
-                        if 'unique constraint' in e.message:
-                            pass
-                        else:
-
-                            clue = {'message': texts.PASSWORD_AUTH_TOKEN_EXTRA_ERROR}
-                            return render(request, 'authapp/accounts_change.html', {'clue': clue})
-
-                user_sub_email_list = [user_email.email]
-                current_site = get_current_site(request)
-
-                message = render_to_string('authapp/password_reset_email.html', {
-                    'user': user,
-                    'domain': current_site.domain,
-                    'uid': uid,
-                    'token': token,
-                })
-
-                subject = '[' + current_site.domain + ']' + texts.EMAIL_CONFIRMATION_SUBJECT
-
-                send_mail(
-                    subject=subject, message=message, from_email=options.DEFAULT_FROM_EMAIL,
-                    recipient_list=user_sub_email_list
-                )
-                clue = None
-                clue['success'] = True
-                clue['message'] = texts.PASSWORD_RESET_EMAIL_SENT
-                return JsonResponse(clue)
-
-            else:
-                clue = None
-                clue['message'] = texts.PASSWORD_RESET_EMAIL_NOT_EXIST
-                data = {
-                    'username': username,
-                }
-                form = PasswordResetForm(data)
-                return render(request, 'main.html', {'form': form, 'clue': clue})
-
+                user_primary_email = UserPrimaryEmail.objects.get(email=username)
+            except UserPrimaryEmail.DoesNotExist:
+                return render_with_clue_one_form(request, 'authapp/password_reset.html', texts.LOGIN_EMAIL_NOT_EXIST, PasswordResetForm())
         else:
             try:
                 user_username = UserUsername.objects.get(username=username)
             except UserUsername.DoesNotExist:
-                pass
+                return render_with_clue_one_form(request, 'authapp/password_reset.html', texts.LOGIN_USERNAME_NOT_EXIST, PasswordResetForm())
+            user_primary_email = UserPrimaryEmail.objects.get(email=user_username.user.userprimaryemail.email)
 
-            if user_username is not None:
+        try:
+            with transaction.atomic():
 
-                user = user_username.user
+                user = user_primary_email.user
 
-                user_email = None
-                try:
-                    user_email = UserEmail.objects.get(user=user, primary=True)
-                except UserEmail.DoesNotExist:
-                    pass
-
+                checker_while_loop = None
+                counter_if_loop = None
                 uid = None
                 token = None
-                check_token_result = None
 
-                while check_token_result is None:
-                    try:
-                        uid = urlsafe_base64_encode(force_bytes(user.pk))
-                        token = account_activation_token.make_token(user)
-                        if not UserPasswordAuthToken.objects.filter(uid=uid, token=token).exists():
-                            UserPasswordAuthToken.objects.create(
-                                email=user_email,
-                                uid=uid,
-                                token=token,
-                            )
-                        check_token_result = 1
-                    except IntegrityError as e:
-                        if 'unique constraint' in e.message:
-                            pass
-                        else:
+                while checker_while_loop is None:
+                    if counter_if_loop <= 9:
 
-                            clue = {'message': texts.PASSWORD_AUTH_TOKEN_EXTRA_ERROR}
-                            return render(request, 'authapp/accounts_change.html', {'clue': clue})
+                        try:
+                            uid = urlsafe_base64_encode(force_bytes(user.pk))
+                            token = account_activation_token.make_token(user)
 
-                user_sub_email_list = [user_email.email]
+                            if not UserPasswordResetToken.objects.filter(uid=uid, token=token).exists():
+                                UserPasswordResetToken.objects.create(
+                                    user_primary_email=user_primary_email,
+                                    uid=uid,
+                                    token=token,
+                                )
+                            checker_while_loop = 1
+                        except IntegrityError as e:
+                            if 'UNIQUE constraint' in str(e.args):
+                                counter_if_loop = counter_if_loop + 1
+                            else:
+                                return render_with_clue_one_form(request, 'authapp/password_reset.html',
+                                                                 texts.UNEXPECTED_ERROR, PasswordResetForm())
+
+                # Send Email
                 current_site = get_current_site(request)
 
-                message = render_to_string('authapp/password_reset_email.html', {
-                    'user': user,
+                subject = '[' + current_site.domain + ']' + texts.EMAIL_CONFIRMATION_SUBJECT
+                message = render_to_string('authapp/_user_password_reset_key.html', {
+                    'username': user.userusername.username,
+                    'name': user.usertextname.name,
+                    'email': user_primary_email.email,
                     'domain': current_site.domain,
                     'uid': uid,
                     'token': token,
                 })
 
-                subject = '[' + current_site.domain + ']' + texts.EMAIL_CONFIRMATION_SUBJECT
+                email_list = [user_primary_email.email]
 
                 send_mail(
                     subject=subject, message=message, from_email=options.DEFAULT_FROM_EMAIL,
-                    recipient_list=user_sub_email_list
+                    recipient_list=email_list
                 )
-                clue = None
-                clue['success'] = True
-                clue['message'] = texts.PASSWORD_RESET_EMAIL_SENT
-                return JsonResponse(clue)
 
-            else:
-                clue = None
-                clue['message'] = texts.PASSWORD_RESET_USERNAME_NOT_EXIST
-                data = {
-                    'username': username,
-                }
-                form = PasswordResetForm(data)
-                return render(request, 'main.html', {'form': form, 'clue': clue})
+                return render_with_clue_one_form(request, 'authapp/password_reset.html',
+                                                 texts.PASSWORD_RESET_EMAIL_SENT, PasswordResetForm())
+        except Exception:
+            pass
+
     else:
         form = PasswordResetForm()
         return render(request, 'authapp/password_reset.html', {'form': form})
 
 
 def password_reset_key_confirm(request, uid, token):
-    if request.method == "POST":
+    if request.method == "GET":
         try:
-            user_auth_token = UserPasswordAuthToken.objects.get(uid=uid, token=token)
-        except UserPasswordAuthToken.DoesNotExist:
-            clue = {'message': texts.PASSWORD_RESET_KEY_NOT_EXIST}
+            user_password_reset_token = UserPasswordResetToken.objects.get(uid=uid, token=token)
+        except UserPasswordResetToken.DoesNotExist:
+            clue = {'message': texts.KEY_NOT_EXIST}
             return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
 
-        if user_auth_token is not None and not now() - user_auth_token.created <= timedelta(seconds=60 * 10):
-            user_auth_token.delete()
-            clue = {'message': texts.PASSWORD_RESET_KEY_EXPIRED}
+        if not (user_password_reset_token is not None
+                and not ((now() - user_password_reset_token.created) <= timedelta(seconds=60 * 10))
+                and (UserPasswordResetToken.objects.filter(
+                    user_primary_email=user_password_reset_token.user_primary_email
+                ).first() == user_password_reset_token)):
+            clue = {'message': texts.KEY_EXPIRED}
             return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
 
         try:
             uid = force_text(urlsafe_base64_decode(uid))
             user = User.objects.get(pk=uid)
-            user_sub_email = user_auth_token.email
-            user_extension = user.userextension
+            user_primary_email = user_password_reset_token.user_primary_email
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             user = None
-            user_sub_email = None
-            user_auth_token = None
-            user_extension = None
+            user_primary_email = None
 
-        if user is not None and user_sub_email is not None \
-                and user_auth_token is not None \
-                and user_extension is not None \
-                and account_activation_token.check_token(user, token):
-
-            form = PasswordResetConfirmForm(request.POST)
-            if form.is_valid():
-                username = user.userextension.usersubusername.username
-                new_password = form.cleaned_data['new_password']
-                new_password_confirm = form.cleaned_data['new_password_confirm']
-
-                if not new_password == new_password_confirm:
-                    form = PasswordChangeForm()
-                    clue = None
-                    clue['message'] = texts.PASSWORD_NOT_THE_SAME
-                    return render(request, 'authapp/password_check.html', {'form': form, 'clue': clue})
-
-                if len(new_password) > 128 or len(new_password) < 6:
-                    clue = None
-                    clue['message'] = texts.PASSWORD_LENGTH_PROBLEM
-                    form = PasswordChangeForm()
-                    return render(request, 'authapp/password_check.html', {'form': form, 'clue': clue})
-                if username == new_password:
-                    clue = None
-                    clue['message'] = texts.PASSWORD_EQUAL_USERNAME
-                    form = PasswordChangeForm()
-                    return render(request, 'authapp/password_check.html', {'form': form, 'clue': clue})
-
-                email = user_sub_email.email
-                if user_extension.verified is False:
-                    user_extension.verified = True
-                    user_extension.save()
-                if user_sub_email.verified is False:
-                    user_sub_email.verified = True
-                    user_sub_email.save()
-
-                UserEmail.objects.filter(Q(email=email), ~Q(user_extension=user_extension)).delete()
-
-                user.password = new_password
-                user.save()
-
-                user_auth_token.delete()
-
-                clue = {'message': texts.KEY_CONFIRM_SUCCESS}
-
-                return render(request, 'authapp/password_changed.html')
-            else:
-                clue = {'message': texts.KEY_CONFIRM_SUCCESS}
-                return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
-        else:
-            clue = {'message': texts.KEY_OVERALL_FAILED}
+        if not (user is not None and user_primary_email is not None
+                and user_password_reset_token is not None
+                and account_activation_token.check_token(user, token)):
+            clue = {'message': texts.KEY_EXPIRED}
             return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
-    else:
-        form = PasswordResetConfirmForm()
-        clue = {'message': texts.KEY_OVERALL_FAILED}
-        return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
+
+        # 이러면 비밀번호 새로 입력할 창을 준다.
+        form = PasswordChangeForm()
+        return render(request, 'authapp/password_change_from_key.html', {'clue': clue, 'form':form})
+    # 여기선 새 패스워드 값을 받아서 처리한다.
+    elif request.method == "POST":
+        form = PasswordChangeForm(request.POST)
+        if form.is_valid():
+            new_password = form.cleaned_data['password']
+            new_password_confirm = form.cleaned_data['password_confirm']
+
+            try:
+                with transaction.atomic():
+                    uid = force_text(urlsafe_base64_decode(uid))
+                    try:
+                        user = User.objects.get(pk=uid)
+                    except User.DoesNotExist:
+                        form = PasswordChangeForm()
+                        return render_with_clue_one_form(request, 'authapp/email_key_confirm.html', texts.USER_NOT_EXIST, form)
+
+                    password_failure = password_failure_validate(user.userusername.username, new_password, new_password_confirm)
+                    if password_failure:
+                        clue_message = None
+                        if password_failure is 1:
+                            clue_message = texts.PASSWORD_NOT_THE_SAME
+                        elif password_failure is 2:
+                            clue_message = texts.PASSWORD_LENGTH_PROBLEM
+                        elif password_failure is 3:
+                            clue_message = texts.PASSWORD_EQUAL_USERNAME
+                        elif password_failure is 4:
+                            clue_message = texts.PASSWORD_BANNED
+                        return render_with_clue_one_form(request, 'authapp/email_key_confirm.html',
+                                                         clue_message, PasswordChangeForm())
+
+                    user.password = new_password
+                    user.save()
+
+                    return redirect('authapp:password_reset_changed_need_login')
+            except Exception:
+                return render_with_clue_one_form(request, 'authapp/email_key_confirm.html',
+                                                 texts.UNEXPECTED_ERROR, PasswordChangeForm())
+
 
 def deactivate_user(request):
     if request.method == "POST":
         form = PasswordCheckBeforeDeactivationForm(request.POST)
         if form.is_valid():
-            user_extension = request.user.userextension
-            user = authenticate(username=user_extension.usersubusername.username,
+            user = authenticate(username=request.user.userusername.username,
                                 password=form.cleaned_data['password'])
             if user is not None:
-                user_extension.activated = False
-                user_extension.save()
+                user.is_active = False
+                user.save()
                 logout(request)
                 return render(request, 'authapp/user_deactivate_done.html')
             else:
-                clue = None
-                clue['success'] = False
-                clue['message'] = texts.PASSWORD_AUTH_FAILED
-                form = PasswordCheckBeforeDeactivationForm()
-                return render(request, 'authapp/user_deactivate.html', {'form': form, 'clue': clue})
+                return render_with_clue_one_form(request, 'authapp/user_deactivate.html', texts.PASSWORD_AUTH_FAILED, PasswordCheckBeforeDeactivationForm())
         else:
-            clue = None
-            clue['success'] = False
-            clue['message'] = texts.PASSWORD_AUTH_FAILED
-            form = PasswordCheckBeforeDeactivationForm()
-            return render(request, 'authapp/user_deactivate.html', {'form': form, 'clue': clue})
+            return render_with_clue_one_form(request, 'authapp/user_deactivate.html', texts.PASSWORD_AUTH_FAILED,
+                                             PasswordCheckBeforeDeactivationForm())
     else:
         form = PasswordCheckBeforeDeactivationForm()
         return render(request, 'authapp/user_deactivate.html', {'form': form})
@@ -1151,27 +898,18 @@ def delete_user(request):
     if request.method == "POST":
         form = PasswordCheckBeforeDeleteForm(request.POST)
         if form.is_valid():
-            user_extension = request.user.userextension
-            user = authenticate(username=user_extension.usersubusername.username,
+            user = authenticate(username=request.user.userusername.username,
                                 password=form.cleaned_data['password'])
             if user is not None:
-                user_extension.activated = False
-                user_extension.save()
-                UserDeleteTimer.objects.create(user_extension=user_extension)
+                user.is_active = False
+                user.save()
                 logout(request)
                 return render(request, 'authapp/user_delete_done.html')
             else:
-                clue = None
-                clue['success'] = False
-                clue['message'] = texts.PASSWORD_AUTH_FAILED
-                form = PasswordCheckBeforeDeleteForm()
-                return render(request, 'authapp/user_delete.html', {'form': form, 'clue': clue})
+                return render_with_clue_one_form(request, 'authapp/user_delete.html', texts.PASSWORD_AUTH_FAILED, PasswordCheckBeforeDeleteForm())
         else:
-            clue = None
-            clue['success'] = False
-            clue['message'] = texts.PASSWORD_AUTH_FAILED
-            form = PasswordCheckBeforeDeleteForm()
-            return render(request, 'authapp/user_delete.html', {'form': form, 'clue': clue})
+            return render_with_clue_one_form(request, 'authapp/user_delete.html', texts.PASSWORD_AUTH_FAILED,
+                                             PasswordCheckBeforeDeleteForm())
     else:
         form = PasswordCheckBeforeDeleteForm()
         return render(request, 'authapp/user_delete.html', {'form': form})

@@ -37,8 +37,6 @@ class UserPrimaryEmail(models.Model):
 
     email = models.EmailField(max_length=255, unique=True, null=True, blank=True)
 
-    verified = models.BooleanField(default=False)
-
     updated = models.DateTimeField(auto_now=True)
     created = models.DateTimeField(auto_now_add=True)
 
@@ -46,38 +44,10 @@ class UserPrimaryEmail(models.Model):
         return "PrimaryEmail for %s" % self.user
 
 
-class UserVerifiedEmail(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-
-    email = models.EmailField(max_length=255, unique=True)
-
-    updated = models.DateTimeField(auto_now=True)
-    created = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return "VerifiedEmail for %s" % self.user
-
-    class Meta:
-        unique_together = ('user', 'email')
-
-
-class UserUnverifiedEmail(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-
-    email = models.EmailField(max_length=255)
-
-    updated = models.DateTimeField(auto_now=True)
-    created = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return "UserEmail for %s" % self.user
-
-    class Meta:
-        unique_together = ('user', 'email')
-
-
 class UserPrimaryEmailAuthToken(models.Model):
     user_primary_email = models.ForeignKey(UserPrimaryEmail, on_delete=models.CASCADE, null=True, blank=True)
+    email = models.EmailField(max_length=255, unique=True)
+
     uid = models.CharField(max_length=64, unique=True)
     token = models.CharField(max_length=34, unique=True)
 
@@ -88,21 +58,9 @@ class UserPrimaryEmailAuthToken(models.Model):
         return "AuthToken for %s" % email
 
 
-class UserUnverifiedEmailAuthToken(models.Model):
-    user_unverified_email = models.ForeignKey(UserUnverifiedEmail, on_delete=models.CASCADE, null=True, blank=True)
-    uid = models.CharField(max_length=64, unique=True)
-    token = models.CharField(max_length=34, unique=True)
-
-    created = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        email = self.user_unverified_email
-        return "AuthToken for %s" % email
-
-
-class UserPasswordAuthToken(models.Model):
+class UserPasswordResetToken(models.Model):
     user_primary_email = models.ForeignKey(UserPrimaryEmail, on_delete=models.CASCADE, null=True, blank=True)
-    user_email = models.ForeignKey(UserEmail, on_delete=models.CASCADE, null=True, blank=True)
+    email = models.EmailField(max_length=255, unique=True)
 
     uid = models.CharField(max_length=64, unique=True)
     token = models.CharField(max_length=34, unique=True)
@@ -117,3 +75,14 @@ class UserPasswordAuthToken(models.Model):
         else:
             email = "No email"
         return "PasswordAuthToken for %s" % email
+
+class UserDelete(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+
+    is_deleted = models.BooleanField(default=False)
+
+    updated = models.DateTimeField(auto_now=True)
+    created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return "PrimaryEmail for %s" % self.user
