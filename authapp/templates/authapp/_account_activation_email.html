@@ -1,0 +1,8 @@
+{% autoescape off %}
+Hi and Welcome {{ name }}, {{ username }}!
+
+Please click on the link below. To confirm your registration:
+
+http://{{ domain }}{% url 'authapp:primary_email_key_confirm' uid=uid  token=token %}
+
+{% endautoescape %}

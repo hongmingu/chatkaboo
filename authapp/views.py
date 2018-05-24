@@ -1,40 +1,32 @@
-from .forms import *
-from .models import *
-from .utils import *
-from .token import *
-from django.contrib.auth.models import User
-from django.contrib.auth import login, authenticate, logout
-from django.urls import reverse
-from django.shortcuts import redirect, render
-from django.shortcuts import get_object_or_404, get_list_or_404
-from django.http import HttpResponse, JsonResponse
-from django.views.decorators.csrf import ensure_csrf_cookie
-from django.core.mail import EmailMessage
-import re
-from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth import get_user_model
-from django.conf import settings
-from django.utils.encoding import force_bytes
-from django.utils.http import urlsafe_base64_encode
-from django.template.loader import render_to_string
-from django.db import IntegrityError
-from django.contrib.sites.shortcuts import get_current_site
-from django.utils.encoding import force_text
-from django.utils.http import urlsafe_base64_decode
-from django.utils.timezone import now, timedelta
 import json
-from authapp import texts
-from authapp import banned
-from authapp import options
-from authapp import status
 import urllib
 from urllib.parse import urlparse
-import ssl
-from bs4 import BeautifulSoup
+
+from django.conf import settings
+from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth.models import User
+from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import send_mail
-from django.http import HttpResponse, HttpResponseNotFound, Http404
-from django.db.models import Q
+from django.db import IntegrityError
 from django.db import transaction
+from django.db.models import Q
+from django.shortcuts import redirect, render
+from django.template.loader import render_to_string
+from django.urls import reverse
+from django.utils.encoding import force_bytes
+from django.utils.encoding import force_text
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.timezone import now, timedelta
+from django.views.decorators.csrf import ensure_csrf_cookie
+
+from authapp import options
+from authapp import texts
+from .forms import *
+from .models import *
+from .token import *
+from .utils import *
+
+
 # Create your models here.
 
 
@@ -141,15 +133,15 @@ def main_create_log_in(request):
                 return render_with_clue_loginform_createform(request, 'authapp/main_first.html',
                                                              texts.EMAIL_ALREADY_USED, LoginForm(), UserCreateForm(data))
 
-            email_failure = email_failure_validate(email)
-            if email_failure:
+            user_text_name_failure = user_text_name_failure_validate(name)
+            if user_text_name_failure:
                 clue_message = None
-                if email_failure is 1:
-                    clue_message = texts.EMAIL_UNAVAILABLE
-                elif email_failure is 2:
-                    clue_message = texts.EMAIL_LENGTH_OVER_255
-                return clue_json_response(0, clue_message)
-
+                if user_text_name_failure is 1:
+                    clue_message = texts.USER_TEXT_NAME_LENGTH_PROBLEM
+                elif user_text_name_failure is 2:
+                    clue_message = texts.USER_TEXT_NAME_BANNED
+                return render_with_clue_loginform_createform(request, 'authapp/main_first.html',
+                                                             clue_message, LoginForm(), UserCreateForm(data))
 
             user_username_exist = UserUsername.objects.filter(username=username).exists()
             if user_username_exist:
@@ -168,10 +160,11 @@ def main_create_log_in(request):
                 elif username_failure is 4:
                     clue_message = texts.USERNAME_BANNED
 
-                return clue_json_response(0, clue_message)
+                return render_with_clue_loginform_createform(request, 'authapp/main_first.html',
+                                                             clue_message, LoginForm(), UserCreateForm(data))
 
-
-            return render_with_clue_loginform_createform(request, 'authapp/main_first.html', None, LoginForm(), UserCreateForm(data))
+            return render_with_clue_loginform_createform(request, 'authapp/main_second.html',
+                                                         None, LoginForm(), UserCreateForm(data))
 
             #######################################################################
 
@@ -194,7 +187,7 @@ def main_create_log_in(request):
 
             user_username_exist = UserUsername.objects.filter(username=username).exists()
             if user_username_exist:
-                return render_with_clue_loginform_createform(request, 'authapp/main_first.html',
+                return render_with_clue_loginform_createform(request, 'authapp/main_second.html',
                                                              texts.USERNAME_ALREADY_USED, LoginForm(), UserCreateForm(data))
 
             username_failure = username_failure_validate(username)
@@ -213,7 +206,7 @@ def main_create_log_in(request):
 
             primary_email_exist = UserPrimaryEmail.objects.filter(email=email).exists()
             if primary_email_exist:
-                return render_with_clue_loginform_createform(request, 'authapp/main_first.html',
+                return render_with_clue_loginform_createform(request, 'authapp/main_second.html',
                                                              texts.EMAIL_ALREADY_USED, LoginForm(), UserCreateForm(data))
 
             email_failure = email_failure_validate(email)
@@ -223,7 +216,8 @@ def main_create_log_in(request):
                     clue_message = texts.EMAIL_UNAVAILABLE
                 elif email_failure is 2:
                     clue_message = texts.EMAIL_LENGTH_OVER_255
-                return clue_json_response(0, clue_message)
+                return render_with_clue_loginform_createform(request, 'authapp/main_second.html',
+                                                             clue_message, LoginForm(), UserCreateForm(data))
 
 
             # password 조건
@@ -241,22 +235,6 @@ def main_create_log_in(request):
                 return render_with_clue_loginform_createform(request, 'authapp/main_second.html', clue_message,
                                                              LoginForm(), UserCreateForm(data))
 
-            # recaptcha part begin
-
-            recaptcha_response = request.POST.get('g-recaptcha-response')
-            url = 'https://www.google.com/recaptcha/api/siteverify'
-            values = {
-                'secret': settings.GOOGLE_RECAPTCHA_SECRET_KEY,
-                'response': recaptcha_response
-            }
-            recaptcha_data = urllib.parse.urlencode(values).encode()
-            recaptcha_req = urllib.request.Request(url, data=recaptcha_data)
-            recaptcha_response = urllib.request.urlopen(recaptcha_req)
-            recaptcha_result = json.loads(recaptcha_response.read().decode())
-
-            if not recaptcha_result['success']:
-                return render_with_clue_loginform_createform(request, 'authapp/main_second.html', texts.RECAPTCHA_CONFIRM_NEED,
-                                                             LoginForm(), UserCreateForm(data))
 
             # Then, go to is_valid below
             if form.is_valid():
@@ -270,9 +248,9 @@ def main_create_log_in(request):
                 try:
                     with transaction.atomic():
 
-                        checker_username_result = None
+                        checker_username_result = 0
                         counter_username = 0
-                        while checker_username_result is None:
+                        while checker_username_result is 0:
                             if counter_username <= 9:
                                 try:
                                     id_number = make_id()
@@ -308,29 +286,26 @@ def main_create_log_in(request):
                             user=new_user_create,
                             name=new_name
                         )
-
-                        checker_email_auth_token_result = None
-                        counter_email_auth_token = None
-                        uid = None
-                        token = None
-
-                        while checker_email_auth_token_result is None:
-                            if counter_email_auth_token <= 9:
+                        checker_while_loop = 0
+                        counter_if_loop = 0
+                        uid = urlsafe_base64_encode(force_bytes(new_user_create.pk)).decode()
+                        token = account_activation_token.make_token(new_user_create)
+                        print(uid)
+                        while checker_while_loop is 0:
+                            if counter_if_loop <= 9:
 
                                 try:
-                                    uid = urlsafe_base64_encode(force_bytes(new_user_create.pk))
-                                    token = account_activation_token.make_token(new_user_create)
-                                    if not UserPrimaryEmailAuthToken.objects.filter(uid=uid, token=token).exists():
-                                        UserPrimaryEmailAuthToken.objects.create(
-                                            user_primary_email=new_user_primary_email_create,
-                                            uid=uid,
-                                            token=token,
-                                            email=new_email,
-                                        )
-                                    checker_email_auth_token_result = 1
+
+                                    UserPrimaryEmailAuthToken.objects.create(
+                                        user_primary_email=new_user_primary_email_create,
+                                        uid=uid,
+                                        token=token,
+                                        email=new_email,
+                                    )
+                                    checker_while_loop = 1
                                 except IntegrityError as e:
                                     if 'UNIQUE constraint' in str(e.args):
-                                        counter_email_auth_token = counter_email_auth_token + 1
+                                        counter_if_loop = counter_if_loop + 1
                                     else:
                                         return render_with_clue_loginform_createform(request, 'authapp/main_second.html',
                                                                                      texts.EMAIL_CONFIRMATION_EXTRA_ERROR, LoginForm(),
@@ -339,7 +314,7 @@ def main_create_log_in(request):
                         current_site = get_current_site(request)
                         subject = '[' + current_site.domain + ']' + texts.EMAIL_CONFIRMATION_SUBJECT
 
-                        message = render_to_string('authapp/account_activation_email.html', {
+                        message = render_to_string('authapp/_account_activation_email.html', {
                             'username': new_user_username.username,
                             'name': new_user_text_name.name,
                             'email': new_user_primary_email_create.email,
@@ -358,16 +333,16 @@ def main_create_log_in(request):
                 # End Transaction
                 except Exception:
                     return render_with_clue_loginform_createform(request, 'authapp/main_second.html',
-                                                                 texts.CREATING_USER_OVERALL_ERROR, LoginForm(),
+                                                                 'error', LoginForm(),
                                                                  UserCreateForm(data))
 
                 login(request, new_user_create)
                 ####################################################
                 ####################################################
-                return redirect('/')
+                return redirect(reverse('baseapp:user_main', kwargs={'user_username': new_user_username.username}))
             else:
                 return render_with_clue_loginform_createform(request, 'authapp/main_second.html',
-                                                             texts.CREATING_USER_OVERALL_ERROR, LoginForm(),
+                                                             'error2', LoginForm(),
                                                              UserCreateForm(data))
 
         elif request.POST['type'] == 'log_in':
@@ -387,7 +362,7 @@ def main_create_log_in(request):
                     pass
 
                 if user_email is None:
-                    return render_with_clue_loginform_createform(request, 'authapp/main_first.html',
+                    return render_with_clue_loginform_createform_log_in(request, 'authapp/main_first.html',
                                                                  texts.LOGIN_EMAIL_NOT_EXIST, LoginForm(data),
                                                                  UserCreateForm(data))
 
@@ -398,7 +373,7 @@ def main_create_log_in(request):
                     pass
 
                 if user_username is None:
-                    return render_with_clue_loginform_createform(request, 'authapp/main_first.html',
+                    return render_with_clue_loginform_createform_log_in(request, 'authapp/main_first.html',
                                                                  texts.LOGIN_USERNAME_NOT_EXIST, LoginForm(data),
                                                                  UserCreateForm())
 
@@ -425,18 +400,16 @@ def main_create_log_in(request):
                             data = {
                                 'username': username,
                             }
-                            return render_with_clue_loginform_createform(request, 'authapp/main_first.html',
+                            return render_with_clue_loginform_createform_log_in(request, 'authapp/main_first.html',
                                                                          texts.LOGIN_FAILED, LoginForm(data),
                                                                          UserCreateForm())
                 except Exception:
-                    return render_with_clue_loginform_createform(request, 'authapp/main_first.html',
+                    return render_with_clue_loginform_createform_log_in(request, 'authapp/main_first.html',
                                                                  texts.UNEXPECTED_ERROR, LoginForm(data),
                                                                  UserCreateForm())
 
     else:
         return render_with_clue_loginform_createform(request, 'authapp/main_first.html', None, LoginForm(), UserCreateForm())
-
-
 
 
 def log_out(request):
@@ -482,6 +455,7 @@ def username_change(request):
                 except Exception:
                     return clue_json_response(0, texts.UNEXPECTED_ERROR)
 
+
 @ensure_csrf_cookie
 def primary_email_change(request):
     if request.method == "POST":
@@ -498,24 +472,24 @@ def primary_email_change(request):
 
                         user = request.user
 
-                        checker_while_loop = None
-                        counter_if_loop = None
+                        checker_while_loop = 0
+                        counter_if_loop = 0
                         uid = None
                         token = None
-                        while checker_while_loop is None:
+                        while checker_while_loop is 0:
                             if counter_if_loop <= 9:
 
                                 try:
                                     uid = urlsafe_base64_encode(force_bytes(user.pk))
                                     token = account_activation_token.make_token(user)
+                                    print(str(token))
+                                    UserPrimaryEmailAuthToken.objects.create(
+                                        user_primary_email=user.userprimaryemail,
+                                        uid=uid,
+                                        token=token,
+                                        email=new_email,
+                                    )
 
-                                    if not UserPrimaryEmailAuthToken.objects.filter(uid=uid, token=token).exists():
-                                        UserPrimaryEmailAuthToken.objects.create(
-                                            user_primary_email=user.userprimaryemail,
-                                            uid=uid,
-                                            token=token,
-                                            email=new_email,
-                                        )
                                     checker_while_loop = 1
                                 except IntegrityError as e:
                                     if 'UNIQUE constraint' in str(e.args):
@@ -568,28 +542,27 @@ def primary_email_key_send(request):
                         user = request.user
 
                         # Start to make token
-                        checker_email_auth_token_result = None
-                        counter_email_auth_token = None
+                        checker_while_loop = 0
+                        counter_if_loop = 0
                         uid = None
                         token = None
 
-                        while checker_email_auth_token_result is None:
-                            if counter_email_auth_token <= 9:
+                        while checker_while_loop is 0:
+                            if counter_if_loop <= 9:
 
                                 try:
                                     uid = urlsafe_base64_encode(force_bytes(user.pk))
                                     token = account_activation_token.make_token(user)
 
-                                    if not UserPrimaryEmailAuthToken.objects.filter(uid=uid, token=token).exists():
-                                        UserPrimaryEmailAuthToken.objects.create(
-                                            user_unverified_email=user_primary_email,
-                                            uid=uid,
-                                            token=token,
-                                        )
-                                    checker_email_auth_token_result = 1
+                                    UserPrimaryEmailAuthToken.objects.create(
+                                        user_unverified_email=user_primary_email,
+                                        uid=uid,
+                                        token=token,
+                                    )
+                                    checker_while_loop = 1
                                 except IntegrityError as e:
                                     if 'UNIQUE constraint' in str(e.args):
-                                        counter_email_auth_token = counter_email_auth_token + 1
+                                        counter_if_loop = counter_if_loop + 1
                                     else:
                                         return clue_json_response(0, texts.CREATING_EMAIL_EXTRA_ERROR)
 
@@ -626,16 +599,16 @@ def primary_email_key_confirm(request, uid, token):
                 try:
                     user_primary_email_auth_token = UserPrimaryEmailAuthToken.objects.get(uid=uid, token=token)
                 except UserPrimaryEmailAuthToken.DoesNotExist:
-                    clue = {'message': texts.KEY_NOT_EXIST}
-                    return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
+                    clue = {'message': texts.KEY_UNAVAILABLE}
+                    return render(request, 'authapp/primary_email_key_confirm.html', {'clue': clue})
 
-                if not (user_primary_email_auth_token is not None
-                        and not ((now() - user_primary_email_auth_token.created) <= timedelta(seconds=60 * 10))
-                        and (UserPrimaryEmailAuthToken.objects.filter(
+                if user_primary_email_auth_token is None \
+                        or ((now() - user_primary_email_auth_token.created) > timedelta(seconds=10)) \
+                        or not (UserPrimaryEmailAuthToken.objects.filter(
                             user_primary_email=user_primary_email_auth_token.user_primary_email
-                        ).first() == user_primary_email_auth_token)):
+                        ).last() == user_primary_email_auth_token):
                     clue = {'message': texts.KEY_EXPIRED}
-                    return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
+                    return render(request, 'authapp/primary_email_key_confirm.html', {'clue': clue})
 
                 try:
                     uid = force_text(urlsafe_base64_decode(uid))
@@ -645,11 +618,9 @@ def primary_email_key_confirm(request, uid, token):
                     user = None
                     user_primary_email = None
 
-                if not (user is not None and user_primary_email is not None
-                        and user_primary_email_auth_token is not None
-                        and account_activation_token.check_token(user, token)):
+                if user is None or user_primary_email is None:
                     clue = {'message': texts.KEY_EXPIRED}
-                    return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
+                    return render(request, 'authapp/primary_email_key_confirm.html', {'clue': clue})
 
                 # 만약 그 사이에 누군가 UserVerifiedEmail 등록해버렸다면 그 때 primary 이메일도 삭제할 것이므로 괜찮다.
                 # 결국 이 전에 return 되어 여기까지 오지도 않을 것이다.
@@ -660,10 +631,10 @@ def primary_email_key_confirm(request, uid, token):
                 user.save()
 
                 clue = {'message': texts.KEY_CONFIRM_SUCCESS}
-                return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
+                return render(request, 'authapp/primary_email_key_confirm.html', {'clue': clue})
         except Exception:
             clue = {'message': texts.KEY_OVERALL_FAILED}
-            return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
+            return render(request, 'authapp/primary_email_key_confirm.html', {'clue': clue})
 
 
 def password_change(request):
@@ -745,24 +716,23 @@ def password_reset(request):
 
                 user = user_primary_email.user
 
-                checker_while_loop = None
-                counter_if_loop = None
+                checker_while_loop = 0
+                counter_if_loop = 0
                 uid = None
                 token = None
 
-                while checker_while_loop is None:
+                while checker_while_loop is 0:
                     if counter_if_loop <= 9:
 
                         try:
                             uid = urlsafe_base64_encode(force_bytes(user.pk))
                             token = account_activation_token.make_token(user)
 
-                            if not UserPasswordResetToken.objects.filter(uid=uid, token=token).exists():
-                                UserPasswordResetToken.objects.create(
-                                    user_primary_email=user_primary_email,
-                                    uid=uid,
-                                    token=token,
-                                )
+                            UserPasswordResetToken.objects.create(
+                                user_primary_email=user_primary_email,
+                                uid=uid,
+                                token=token,
+                            )
                             checker_while_loop = 1
                         except IntegrityError as e:
                             if 'UNIQUE constraint' in str(e.args):
@@ -806,8 +776,8 @@ def password_reset_key_confirm(request, uid, token):
         try:
             user_password_reset_token = UserPasswordResetToken.objects.get(uid=uid, token=token)
         except UserPasswordResetToken.DoesNotExist:
-            clue = {'message': texts.KEY_NOT_EXIST}
-            return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
+            clue = {'message': texts.KEY_UNAVAILABLE}
+            return render(request, 'authapp/primary_email_key_confirm.html', {'clue': clue})
 
         if not (user_password_reset_token is not None
                 and not ((now() - user_password_reset_token.created) <= timedelta(seconds=60 * 10))
@@ -815,7 +785,7 @@ def password_reset_key_confirm(request, uid, token):
                     user_primary_email=user_password_reset_token.user_primary_email
                 ).first() == user_password_reset_token)):
             clue = {'message': texts.KEY_EXPIRED}
-            return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
+            return render(request, 'authapp/primary_email_key_confirm.html', {'clue': clue})
 
         try:
             uid = force_text(urlsafe_base64_decode(uid))
@@ -829,7 +799,7 @@ def password_reset_key_confirm(request, uid, token):
                 and user_password_reset_token is not None
                 and account_activation_token.check_token(user, token)):
             clue = {'message': texts.KEY_EXPIRED}
-            return render(request, 'authapp/email_key_confirm.html', {'clue': clue})
+            return render(request, 'authapp/primary_email_key_confirm.html', {'clue': clue})
 
         # 이러면 비밀번호 새로 입력할 창을 준다.
         form = PasswordChangeForm()
@@ -848,7 +818,7 @@ def password_reset_key_confirm(request, uid, token):
                         user = User.objects.get(pk=uid)
                     except User.DoesNotExist:
                         form = PasswordChangeForm()
-                        return render_with_clue_one_form(request, 'authapp/email_key_confirm.html', texts.USER_NOT_EXIST, form)
+                        return render_with_clue_one_form(request, 'authapp/primary_email_key_confirm.html', texts.USER_NOT_EXIST, form)
 
                     password_failure = password_failure_validate(user.userusername.username, new_password, new_password_confirm)
                     if password_failure:
@@ -861,7 +831,7 @@ def password_reset_key_confirm(request, uid, token):
                             clue_message = texts.PASSWORD_EQUAL_USERNAME
                         elif password_failure is 4:
                             clue_message = texts.PASSWORD_BANNED
-                        return render_with_clue_one_form(request, 'authapp/email_key_confirm.html',
+                        return render_with_clue_one_form(request, 'authapp/primary_email_key_confirm.html',
                                                          clue_message, PasswordChangeForm())
 
                     user.password = new_password
@@ -869,7 +839,7 @@ def password_reset_key_confirm(request, uid, token):
 
                     return redirect('authapp:password_reset_changed_need_login')
             except Exception:
-                return render_with_clue_one_form(request, 'authapp/email_key_confirm.html',
+                return render_with_clue_one_form(request, 'authapp/primary_email_key_confirm.html',
                                                  texts.UNEXPECTED_ERROR, PasswordChangeForm())
 
 

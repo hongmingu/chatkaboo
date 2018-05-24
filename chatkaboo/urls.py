@@ -17,7 +17,22 @@ from django.contrib import admin
 from django.urls import path, re_path, include
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
     re_path(r'^accounts/', include('authapp.urls')),
-    # re_path(r'^', include('website.urls')),
+    re_path(r'^', include('baseapp.urls')),
 ]
+
+
+from django.views.generic import TemplateView
+# 이 아래부분 미디어 파일 디벨롭모드에서 쓰기 위해 필요
+from django.conf import settings
+from django.conf.urls.static import static
+
+if settings.DEBUG:
+    import debug_toolbar
+
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += [
+        # path('admin/', admin.site.urls),
+        re_path(r'^__debug__/', include(debug_toolbar.urls)),
+        re_path(r'^a/admin/', admin.site.urls),
+    ]

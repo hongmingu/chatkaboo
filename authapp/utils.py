@@ -50,6 +50,15 @@ def username_failure_validate(username):
     return 0
 
 
+def user_text_name_failure_validate(user_text_name):
+    if not (1 <= len(user_text_name) <= 30):
+        return 1
+    from authapp import banned
+    if user_text_name in banned.BANNED_USER_TEXT_NAME_LIST:
+        return 2
+    return 0
+
+
 def email_failure_validate(email):
     import re
     if not (re.match('[^@]+@[^@]+\.[^@]+', email)):
@@ -63,7 +72,7 @@ def email_failure_validate(email):
 def password_failure_validate(username, password, password_confirm):
     if not password == password_confirm:
         return 1
-    if not (6 <= password <= 128):
+    if not (6 <= len(password) <= 128):
         return 2
     if username == password:
         return 3
@@ -73,6 +82,15 @@ def password_failure_validate(username, password, password_confirm):
         return 4
 
     return 0
+
+
+def render_with_clue_loginform_createform_log_in(request, template, clue_message, log_in_form, create_form):
+    from django.shortcuts import render
+    if clue_message is not None:
+        clue = {'message': clue_message}
+        return render(request, template, {'create_form': create_form, 'log_in_form': log_in_form, 'clue_log_in': clue})
+    else:
+        return render(request, template, {'create_form': create_form, 'log_in_form': log_in_form})
 
 
 def render_with_clue_loginform_createform(request, template, clue_message, log_in_form, create_form):

@@ -1,16 +1,39 @@
-{% extends 'base.html' %}
-{% block contents %}
-    {% if user.userextension.status == 1010 %}
-        <!--USER_EXTENSION_USING_VERIFIED-->
+<div class="mobile_display_none" style="height: 65px"></div>
 
-    {% elif user.userextension.status == 1020 %}
-        <!--USER_EXTENSION_USING_NOT_VERIFIED-->
+                    <p class="h3">Register</p>
+                    <form method="post" action=".">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            {{ create_form.name }}
+                        </div>
+                        <div class="form-group">
+                            {{ create_form.username }}
+                        </div>
+                        <div class="form-group">
+                            {{ create_form.email }}
+                        </div>
+                        <div class="form-group">
+                            {{ create_form.password }}
+                        </div>
+                        <div class="form-group">
+                            {{ create_form.password_confirm }}
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <div class="g-recaptcha" data-sitekey="6Ld4Tz4UAAAAAEnsEF3EcBBdGViccpEQNiA1rBcs"></div>
+                            </div>
+                        </div>
 
-    {% elif user.userextension.status == 1021 %}
-        <!--USER_EXTENSION_USED_UNDER_30DAYS-->
+                        <div style="height: 10px"></div>
 
-    {% elif user.userextension.status == 1022 %}
-        <!--USER_EXTENSION_USED_OVER_30DAYS-->
-
-    {% endif %}
-{% endblock %}
+                        <div class="row">
+                            <div class="col-xs-9">
+                                {% if clue %}
+                                    <p class="text-primary" style="word-wrap: break-word">{{ clue.message }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="col-xs-3">
+                                <button type="submit" class="btn btn-default pull-right" name="type" value="create_second">Submit</button>
+                            </div>
+                        </div>
+                    </form>

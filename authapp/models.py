@@ -48,7 +48,7 @@ class UserPrimaryEmailAuthToken(models.Model):
     user_primary_email = models.ForeignKey(UserPrimaryEmail, on_delete=models.CASCADE, null=True, blank=True)
     email = models.EmailField(max_length=255, unique=True)
 
-    uid = models.CharField(max_length=64, unique=True)
+    uid = models.CharField(max_length=64)
     token = models.CharField(max_length=34, unique=True)
 
     created = models.DateTimeField(auto_now_add=True)
@@ -62,7 +62,7 @@ class UserPasswordResetToken(models.Model):
     user_primary_email = models.ForeignKey(UserPrimaryEmail, on_delete=models.CASCADE, null=True, blank=True)
     email = models.EmailField(max_length=255, unique=True)
 
-    uid = models.CharField(max_length=64, unique=True)
+    uid = models.CharField(max_length=64)
     token = models.CharField(max_length=34, unique=True)
 
     created = models.DateTimeField(auto_now_add=True)
@@ -75,6 +75,7 @@ class UserPasswordResetToken(models.Model):
         else:
             email = "No email"
         return "PasswordAuthToken for %s" % email
+
 
 class UserDelete(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)

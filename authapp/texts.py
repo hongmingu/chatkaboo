@@ -2,6 +2,11 @@ from django.contrib.sites.shortcuts import get_current_site
 
 BAD_ACCESS = 'Bad Access'
 UNEXPECTED_ERROR = 'unexpected error'
+
+USER_TEXT_NAME_LENGTH_PROBLEM = 'name should be 6 <= password <= 30 /' \
+                          ' greater than or equal to 6, less than or equal to 30'
+USER_TEXT_NAME_BANNED = 'It\'s unavailable name'
+
 USERNAME_UNAVAILABLE = 'username can be made of digit, alphabet, . or _'
 USERNAME_LENGTH_PROBLEM = 'username should be 6 <= password <= 30 /' \
                           ' greater than or equal to 6, less than or equal to 30'
@@ -37,7 +42,7 @@ CREATING_USER_OVERALL_ERROR = 'There is something wrong'
 
 RECAPTCHA_CONFIRM_NEED = 'Check that you are human'
 
-KEY_NOT_EXIST = 'This key is unavailable'
+KEY_UNAVAILABLE = 'This key is unavailable'
 KEY_EXPIRED = 'This key is expired'
 KEY_ALREADY_VIEWED = 'This key is already expired'
 KEY_CONFIRM_SUCCESS = 'Thanks for email confirmation'

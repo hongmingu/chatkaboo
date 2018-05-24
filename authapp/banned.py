@@ -9,3 +9,7 @@ BANNED_USERNAME_LIST = [
 BANNED_USERNAME_LIST_NOT_COMPLETELY = [
     'admin', 'administrator', 'master', 'manager'
 ]
+
+BANNED_USER_TEXT_NAME_LIST = [
+    'chatkaboo',
+]

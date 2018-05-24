@@ -3,30 +3,17 @@
 <head>
     <meta charset="UTF-8">
 
-    <title>Laymei 환영합니다</title>
+    <title>ChatKaboo</title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
+    {% include 'others/header_static.html' %}
     {% load static from staticfiles %}
-    <!--jquery 3.3.1-->
-    <script src="{% static 'js/jquery-3.3.1.js' %}"></script>
-    <!--jquery-csrf-->
-    <script src="{% static 'js/jquery-csrf.js' %}"></script>
-
-    <!--bootstrap-->
-    <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap.css' %}">
-    <script src="{% static 'bootstrap/js/bootstrap.js' %}"></script>
-
-    <!-- recaptcha -->
     <script src='https://www.google.com/recaptcha/api.js'></script>
-
-{% if user.is_authenticated %}
-<!--
-<meta http-equiv="refresh" content="5;url=http://www.homejjang.com/">
--->
-
-{% else %}
-{% endif %}
+    <link href="https://fonts.googleapis.com/css?family=Tauri" rel="stylesheet">
+    {% if user.is_authenticated %}
+    {% else %}
+    {% endif %}
 
     <style>
         @media screen and (max-width: 768px) {
@@ -34,14 +21,17 @@
             .mobile_display_none {
                 display: none;
             }
+
             .mobile_display_block {
                 display: block;
             }
         }
+
         @media screen and (min-width: 769px) {
             .desktop_display_none {
                 display: none;
             }
+
             .desktop_display_block {
                 display: block;
             }
@@ -49,97 +39,161 @@
 
         .login-form {
             font-size: 12px;
+            height: 34px;
         }
+
+        .padding_10 {
+            padding: 10px;
+        }
+
+        .text_forgot_password {
+            font-size: 12px;
+        }
+
+        .text_forgot_password_mobile {
+            margin-right: 40px;
+            padding-top: 8px;
+            padding-bottom: 8px;
+            margin-bottom: 0;
+        }
+
+        .padding_right_0 {
+            padding-right: 0;
+        }
+
+        .padding_left_0 {
+            padding-left: 0;
+        }
+
+        .padding_35 {
+            padding: 35px;
+        }
+
+        .word_wrap_break_word {
+            word-wrap: break-word;
+        }
+
+        .span_chat {
+            background-color: #2ac31b;
+            padding: 5px;
+            color: white;
+            border-radius: 5px;
+            margin-right: 5px;
+            font-family: 'Tauri', sans-serif;
+        }
+
+        .span_kaboo {
+            font-family: 'Tauri', sans-serif;
+        }
+
     </style>
 </head>
 <body>
-
+{% include 'others/bootstrap_tester.html' %}
 <div class="container-fluid">
     <div class="row">
         <div class="col-sm-offset-1 col-sm-10 col-md-offset-2 col-md-8">
-            <p><h1>Laymei</h1></p>
-            <div class="row">
-                <div class="mobile_display_none">
-                    <div class="col-sm-3"></div>
-                    <div class="col-sm-9">
-                        <div class="row">
-                            <form method="post" action=".">
-                                {% csrf_token %}
-                                <div class="col-sm-5 form-group">
-                                    {{ log_in_form.username }}
-                                </div>
-                                <div class="col-sm-5 form-group">
-                                    {{ log_in_form.password }}
-                                </div>
-                                <div class="col-sm-2">
-                                    <button type="submit" class="btn btn-default pull-right login-form" name="type" value="log_in" style="height: 34px;">Login</button>
-
-                                    <p class="text-primary pull-right desktop_display_none" style="margin-right: 40px;font-size: 13px;padding-top: 8px;padding-bottom: 8px;margin-bottom: 0px;">forgot password</p>
-
-                                </div>
-                            </form>
-                        </div>
+            <h1>
+                <span class="span_chat">Chat</span><span class="gradation span_kaboo"
+                                                         style="font-family: 'Tauri', sans-serif;">Kaboo</span>
+            </h1>
+        </div>
+    </div>
+    <div class="row">
+        <div class="padding_10"></div>
+        <div class="col-sm-offset-1 col-sm-10 col-md-offset-2 col-md-8">
+            <div class="col-sm-offset-2 col-sm-10 padding_right_0 padding_left_0">
+                <form method="post" action=".">
+                    {% csrf_token %}
+                    <div class="col-sm-5 form-group">
+                        {{ log_in_form.username }}
                     </div>
-                </div>
+                    <div class="col-sm-5 form-group">
+                        {{ log_in_form.password }}
+                    </div>
+                    <div class="col-sm-2">
+                        <button type="submit" class="btn btn-default pull-right login-form" name="type" value="log_in">
+                            Login
+                        </button>
 
+                        <p class="text-primary pull-right desktop_display_none text_forgot_password text_forgot_password_mobile">
+                            forgot password?</p>
+                    </div>
+                </form>
             </div>
-            <div class="row">
-                <div class="col-sm-7">
-                    <div class="mobile_display_none" style="height: 140px"></div>
-                    <div class="mobile_display_none" style="height: 70px"></div>
-                    <p>This site is for messaging</p>
-                    <p>You can talk with your friends and lay your message to your friends or other your followers</p>
-                </div>
-                <div class="col-sm-5">
-                    <div class="mobile_display_none" style="height: 65px"></div>
-
-                    <p class="h3">Register</p>
-                    <form method="post" action=".">
-                        {% csrf_token %}
-                        <div class="form-group">
-                            {{ create_form.name }}
-                        </div>
-                        <div class="form-group">
-                            {{ create_form.username }}
-                        </div>
-                        <div class="form-group">
-                            {{ create_form.email }}
-                        </div>
-                        <div class="form-group">
-                            {{ create_form.password }}
-                        </div>
-                        <div class="form-group">
-                            {{ create_form.password_confirm }}
-                        </div>
-                        <div class="row">
-                            <div class="col-xs-12">
-                                <div class="g-recaptcha" data-sitekey="6Ld4Tz4UAAAAAEnsEF3EcBBdGViccpEQNiA1rBcs"></div>
-                            </div>
-                        </div>
-
-                        <div style="height: 10px"></div>
-
-                        <div class="row">
-                            <div class="col-xs-9">
-                                {% if clue %}
-                                    <p class="text-primary" style="word-wrap: break-word">{{ clue.message }}</p>
-                                {% endif %}
-                            </div>
-                            <div class="col-xs-3">
-                                <button type="submit" class="btn btn-default pull-right" name="type" value="create_second">Submit</button>
-                            </div>
-                        </div>
-                    </form>
+        </div>
+    </div>
+    <div class="row">
+        <div class="mobile_display_none">
+            <div class="col-sm-offset-1 col-sm-10 col-md-offset-2 col-md-8">
+                <div class="col-sm-10 padding_right_0">
+                    <p class="text-primary text-right text_forgot_password">forgot password?</p>
                 </div>
             </div>
         </div>
     </div>
+    <div class="row">
+        {% if clue_log_in %}
+            <p class="text-primary text-center word_wrap_break_word">{{ clue_log_in.message }}</p>
+        {% endif %}
+    </div>
+    <div class="row">
+        <div class="desktop_display_none">
+            <div class="padding_10"></div>
+            <div class="padding_10"></div>
+            <div class="padding_10"></div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-offset-1 col-sm-10 col-md-offset-2 col-md-8">
+
+            <div class="col-sm-7">
+                <div class="mobile_display_none padding_35"></div>
+                <div class="mobile_display_none padding_35"></div>
+                <div class="mobile_display_none padding_35"></div>
+                <p>This site is for messaging</p>
+                <p>You can talk with your friends and lay your message to your friends or other your followers</p>
+            </div>
+            <div class="col-sm-5">
+                <div class="mobile_display_none padding_35"></div>
+                <div class="desktop_display_none padding_10"></div>
+                <p class="h3">Register</p>
+                <form method="post" action=".">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        {{ create_form.name }}
+                    </div>
+                    <div class="form-group">
+                        {{ create_form.username }}
+                    </div>
+                    <div class="form-group">
+                        {{ create_form.email }}
+                    </div>
+                    <div class="form-group">
+                        {{ create_form.password }}
+                    </div>
+                    <div class="form-group">
+                        {{ create_form.password_confirm }}
+                    </div>
+
+                    <div style="height: 10px"></div>
+
+                    <div class="row">
+                        <div class="col-xs-9">
+                            {% if clue %}
+                                <p class="text-primary word_wrap_break_word">{{ clue.message }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-xs-3">
+                            <button type="submit" class="btn btn-default pull-right" name="type" value="create_second">
+                                Create
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
-
 </body>
-<script>
-    $(document).ready(function () {
-
-    });
-</script>
 </html>
