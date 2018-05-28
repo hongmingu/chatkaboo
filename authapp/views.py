@@ -28,12 +28,6 @@ from .utils import *
 
 
 # Create your models here.
-
-
-def accounts(request):
-    return render(request, 'authapp/accounts.html')
-
-
 '''
 password = models.CharField(_('password'), max_length=128)
 
@@ -286,11 +280,11 @@ def main_create_log_in(request):
                             user=new_user_create,
                             name=new_name
                         )
+
                         checker_while_loop = 0
                         counter_if_loop = 0
                         uid = urlsafe_base64_encode(force_bytes(new_user_create.pk)).decode()
                         token = account_activation_token.make_token(new_user_create)
-                        print(uid)
                         while checker_while_loop is 0:
                             if counter_if_loop <= 9:
 
@@ -311,19 +305,18 @@ def main_create_log_in(request):
                                                                                      texts.EMAIL_CONFIRMATION_EXTRA_ERROR, LoginForm(),
                                                                                      UserCreateForm(data))
 
-                        current_site = get_current_site(request)
-                        subject = '[' + current_site.domain + ']' + texts.EMAIL_CONFIRMATION_SUBJECT
+                        subject = '[' + texts.SITE_NAME + ']' + texts.EMAIL_CONFIRMATION_SUBJECT
 
                         message = render_to_string('authapp/_account_activation_email.html', {
                             'username': new_user_username.username,
                             'name': new_user_text_name.name,
                             'email': new_user_primary_email_create.email,
-                            'domain': current_site.domain,
+                            'domain': texts.SITE_DOMAIN,
+                            'site_name': texts.SITE_NAME,
                             'uid': uid,
                             'token': token,
                         })
 
-                        # Here needs variable of form.cleaned_data['email']?
                         new_user_email_list = [new_email]
 
                         send_mail(
@@ -353,15 +346,13 @@ def main_create_log_in(request):
                 'username': username,
             }
 
-            user_email = None
-            user_username = None
             if '@' in username:
                 try:
-                    user_email = UserPrimaryEmail.objects.get(email=username, primary=True)
+                    user_primary_email = UserPrimaryEmail.objects.get(email=username, primary=True)
                 except UserPrimaryEmail.DoesNotExist:
-                    pass
+                    user_primary_email = None
 
-                if user_email is None:
+                if user_primary_email is None:
                     return render_with_clue_loginform_createform_log_in(request, 'authapp/main_first.html',
                                                                  texts.LOGIN_EMAIL_NOT_EXIST, LoginForm(data),
                                                                  UserCreateForm(data))
@@ -370,7 +361,7 @@ def main_create_log_in(request):
                 try:
                     user_username = UserUsername.objects.get(username=username)
                 except UserUsername.DoesNotExist:
-                    pass
+                    user_username = None
 
                 if user_username is None:
                     return render_with_clue_loginform_createform_log_in(request, 'authapp/main_first.html',
@@ -388,13 +379,18 @@ def main_create_log_in(request):
                         if user is not None:
 
                             login(request, user)
+                            print('1')
+                            try:
+                                user_delete = UserDelete.objects.get(user=user)
+                            except UserDelete.DoesNotExist:
+                                user_delete = None
+                            if user_delete is not None:
+                                user_delete.delete()
+                                print('2')
 
-                            if user.userdelete.is_deleted is True:
-                                user.userdelete.is_deleted = False
-                                user.userdelete.save()
                             ####################################################
                             ####################################################
-                            return redirect(reverse('talk:main'))
+                            return redirect(reverse('baseapp:user_main', kwargs={'user_username': user.userusername.username}))
 
                         else:
                             data = {
@@ -498,15 +494,14 @@ def primary_email_change(request):
                                         return render_with_clue_one_form(request, 'authapp/password_reset.html',
                                                                          texts.UNEXPECTED_ERROR, PasswordResetForm())
 
-                        # Send Email
-                        current_site = get_current_site(request)
+                        subject = '[' + texts.SITE_NAME + ']' + texts.EMAIL_CONFIRMATION_SUBJECT
 
-                        subject = '[' + current_site.domain + ']' + texts.EMAIL_CONFIRMATION_SUBJECT
                         message = render_to_string('authapp/_user_password_reset_key.html', {
                             'username': user.userusername.username,
                             'name': user.usertextname.name,
                             'email': new_email,
-                            'domain': current_site.domain,
+                            'domain': texts.SITE_DOMAIN,
+                            'site_name': texts.SITE_NAME,
                             'uid': uid,
                             'token': token,
                         })
@@ -567,14 +562,14 @@ def primary_email_key_send(request):
                                         return clue_json_response(0, texts.CREATING_EMAIL_EXTRA_ERROR)
 
                         # Send Email
-                        current_site = get_current_site(request)
 
-                        subject = '[' + current_site.domain + ']' + texts.EMAIL_CONFIRMATION_SUBJECT
+                        subject = '[' + texts.SITE_NAME + ']' + texts.EMAIL_CONFIRMATION_SUBJECT
                         message = render_to_string('authapp/_user_primary_email_key.html', {
                             'username': user.userusername.username,
                             'name': user.usertextname.name,
                             'email': user_primary_email.email,
-                            'domain': current_site.domain,
+                            'domain': texts.SITE_DOMAIN,
+                            'site_name': texts.SITE_NAME,
                             'uid': uid,
                             'token': token,
                         })
@@ -603,7 +598,7 @@ def primary_email_key_confirm(request, uid, token):
                     return render(request, 'authapp/primary_email_key_confirm.html', {'clue': clue})
 
                 if user_primary_email_auth_token is None \
-                        or ((now() - user_primary_email_auth_token.created) > timedelta(seconds=10)) \
+                        or ((now() - user_primary_email_auth_token.created) > timedelta(seconds=60*10)) \
                         or not (UserPrimaryEmailAuthToken.objects.filter(
                             user_primary_email=user_primary_email_auth_token.user_primary_email
                         ).last() == user_primary_email_auth_token):
@@ -630,7 +625,7 @@ def primary_email_key_confirm(request, uid, token):
 
                 user.save()
 
-                clue = {'message': texts.KEY_CONFIRM_SUCCESS}
+                clue = {'message': texts.KEY_CONFIRM_SUCCESS, 'success': 'got succeed', }
                 return render(request, 'authapp/primary_email_key_confirm.html', {'clue': clue})
         except Exception:
             clue = {'message': texts.KEY_OVERALL_FAILED}
@@ -682,19 +677,6 @@ def password_change(request):
 
 def password_reset(request):
     if request.method == "POST":
-        recaptcha_response = request.POST.get('g-recaptcha-response')
-        url = 'https://www.google.com/recaptcha/api/siteverify'
-        values = {
-            'secret': settings.GOOGLE_RECAPTCHA_SECRET_KEY,
-            'response': recaptcha_response
-        }
-        recaptcha_data = urllib.parse.urlencode(values).encode()
-        recaptcha_req = urllib.request.Request(url, data=recaptcha_data)
-        recaptcha_response = urllib.request.urlopen(recaptcha_req)
-        recaptcha_result = json.loads(recaptcha_response.read().decode())
-
-        if not recaptcha_result['success']:
-            return render_with_clue_one_form(request, 'authapp/password_reset.html', texts.RECAPTCHA_CONFIRM_NEED, PasswordResetForm())
 
         form = PasswordResetForm(request.POST)
 
@@ -742,14 +724,14 @@ def password_reset(request):
                                                                  texts.UNEXPECTED_ERROR, PasswordResetForm())
 
                 # Send Email
-                current_site = get_current_site(request)
 
-                subject = '[' + current_site.domain + ']' + texts.EMAIL_CONFIRMATION_SUBJECT
+                subject = '[' + texts.SITE_NAME + ']' + texts.EMAIL_CONFIRMATION_SUBJECT
                 message = render_to_string('authapp/_user_password_reset_key.html', {
                     'username': user.userusername.username,
                     'name': user.usertextname.name,
                     'email': user_primary_email.email,
-                    'domain': current_site.domain,
+                    'domain': texts.SITE_DOMAIN,
+                    'site_name': texts.SITE_NAME,
                     'uid': uid,
                     'token': token,
                 })

@@ -80,8 +80,6 @@ class UserPasswordResetToken(models.Model):
 class UserDelete(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
 
-    is_deleted = models.BooleanField(default=False)
-
     updated = models.DateTimeField(auto_now=True)
     created = models.DateTimeField(auto_now_add=True)
 

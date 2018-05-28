@@ -1,8 +1,10 @@
 {% autoescape off %}
-Hi and Welcome {{ name }}, {{ username }}!
+Hi and Welcome {{ name }}, {{ username }}! From {{ site_name }}
+
+This mail is to {{ email }}
 
 Please click on the link below. To confirm your registration:
 
-http://{{ domain }}{% url 'authapp:primary_email_key_confirm' uid=uid  token=token %}
+https://{{ domain }}{% url 'authapp:primary_email_key_confirm' uid=uid  token=token %}
 
 {% endautoescape %}

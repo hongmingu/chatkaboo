@@ -3,98 +3,41 @@
 <head>
     <meta charset="UTF-8">
 
-    <title>ChatKaboo</title>
-
+    <title>ChatKaboo Confirmation</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
     {% include 'others/header_static.html' %}
     {% load static from staticfiles %}
     <link href="https://fonts.googleapis.com/css?family=Tauri" rel="stylesheet">
-    {% if user.is_authenticated %}
-    {% else %}
-    {% endif %}
 
-    <style>
-        @media screen and (max-width: 768px) {
-            /* 모바일에 사용될 스타일 시트를 여기에 작성합니다. */
-            .mobile_display_none {
-                display: none;
-            }
-            .mobile_display_block {
-                display: block;
-            }
-        }
-
-        @media screen and (min-width: 769px) {
-            .desktop_display_none {
-                display: none;
-            }
-            .desktop_display_block {
-                display: block;
-            }
-        }
-
-        .login-form {
-            font-size: 12px;
-            height: 34px;
-        }
-
-        .padding_10 {
-            padding: 10px;
-        }
-
-        .text_forgot_password {
-            font-size: 12px;
-        }
-
-        .text_forgot_password_mobile {
-            margin-right: 40px;
-            padding-top: 8px;
-            padding-bottom: 8px;
-            margin-bottom: 0;
-        }
-
-        .padding_right_0 {
-            padding-right: 0;
-        }
-        .padding_left_0 {
-            padding-left: 0;
-        }
-
-        .padding_35 {
-            padding: 35px;
-        }
-
-        .word_wrap_break_word {
-            word-wrap: break-word;
-        }
-
-        .span_chat {
-            background-color: #2ac31b;
-            padding: 5px;
-            color: white;
-            border-radius: 5px;
-            margin-right: 5px;
-            font-family: 'Tauri', sans-serif;
-        }
-
-        .span_kaboo {
-            font-family: 'Tauri', sans-serif;
-        }
-
-    </style>
 </head>
 <body>
 {% include 'others/bootstrap_tester.html' %}
 <div class="container-fluid">
     <div class="row">
+        <div class="col-sm-offset-1 col-sm-10 col-md-offset-2 col-md-8">
+            <h1>
+                <span class="span_chat">Chat</span><span class="gradation span_kaboo"
+                                                         style="font-family: 'Tauri', sans-serif;">Kaboo</span>
+            </h1>
+        </div>
+    </div>
+    <div class="row">
         {% if clue %}
-            <p><h1>{{ clue.message }}</h1></p>
+            <p><h2>{{ clue.message }}</h2></p>
         {% endif %}
     </div>
+    {% if clue.success %}
+    <div class="row">
+        <p><h4>Thank you, Let's back to Chatkaboo site:</h4></p>
+        <a class="btn btn-default btn-lg" href="https://www.chatkaboo.com">www.chatkaboo.com</a>
+    </div>
+    {% else %}
+    <div class="row">
+        <p><h4>There is something wrong, Please retry your email confirmation:</h4></p>
+        <a class="btn btn-default btn-lg" href="https://www.chatkaboo.com">www.chatkaboo.com</a>
+    </div>
+    {% endif %}
 </div>
 </body>
-<script>
-
-</script>
 </html>

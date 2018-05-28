@@ -11,13 +11,13 @@
 
     <style>
 
-        @media screen and (max-width: 767px) {
+        @media screen and (max-width: 768px) {
             /* 모바일에 사용될 스타일 시트를 여기에 작성합니다. */
             .mobile_display_none { display: none; }
             .mobile_display_block { display: block; }
         }
 
-        @media screen and (min-width: 768px) {
+        @media screen and (min-width: 769px) {
             .desktop_display_none { display: none; }
             .desktop_display_block { display: block; }
         }
@@ -100,6 +100,7 @@
 
 </head>
 <body>
+
 <!--navbar start-->
 <nav class="navbar navbar-default navbar-fixed-top navbar_base">
     <div class="container-fluid padding_right_0">
@@ -152,36 +153,6 @@
     </div>
 </nav>
 
-<!--navbar for search start jquery로 이 navbar 자체를 지웠다 열었다 함 + affix 설정 알아보기 fixed-top 옵션 때문에 어디에 추가하건 위치는 같게 나올 것이다.-->
-<nav class="navbar navbar-default navbar-fixed-top navbar_search_base" id="navbar_search" style="top: 50px">
-    <div class="container-fluid padding_right_0" style="padding-left: 0px;">
-        <form class="navbar-form navbar_search_form_base" style="width: 100%; margin: auto">
-        <div class="input-group input-group-sm">
-            <input class="form-control" placeholder="Search" id="searchbar" type="text">
-            <div class="input-group-btn">
-                <i class="btn btn-default"><i class="glyphicon glyphicon-search"></i>
-                </i>
-            </div>
-        </div>
-        </form>
-    </div>
-</nav>
-<button id="btn_navssbar">navbar</button><br>
-<button id="btn_navssbar">navbar</button><br>
-<button id="btn_navssbar">navbar</button><br>
-<button id="btn_navssbar">navbar</button><br>
-<button id="btn_navssbar">navbar</button><br>
-<button id="btn_navssbar">navbar</button><br>
-<button id="btn_navssbar">navbar</button><br>
-<button id="btn_navssbar">navbar</button><br>
-<button id="btn_navssbar">navbar</button><br>
-<button id="btn_navssbar">navbar</button><br>
-<button id="btn_navssbar">navbar</button><br>
-<button id="btn_navssbar">navbar</button><br>
-<button id="btn_navssbar">navbar</button><br>
-<button id="btn_navssbar">navbar</button><br>
-<button id="btn_navssbar">navbar</button><br>
-
 <!--navbar end-->
 <div class="container-fluid">
     <div class="row">
@@ -212,20 +183,10 @@
 
     </div>
 </div>
-<button id="btn_navbar">navbar</button>
+
 </body>
 <script>
     $(document).ready(function () {
-        $("#btn_navbar").click(function () {
-           if ($("#navbar_search").length) {
-               $("#navbar_search").remove()
-           }
-           else {
-
-           }
-       });
-
-  // do something here
         //$("#a_search_modal").click(function () {
         //    $("#div_modal_search").modal();
         //

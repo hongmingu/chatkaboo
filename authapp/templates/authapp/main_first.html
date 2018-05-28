@@ -168,9 +168,7 @@
                     </div>
                     <div class="row">
                         <div class="col-xs-9">
-                            {% if clue %}
-                                <p class="text-primary word_wrap_break_word">{{ clue.message }}</p>
-                            {% endif %}
+                            <p class="text-primary word_wrap_break_word">{% if clue %}{{ clue.message }}{% endif %}</p>
                         </div>
                         <div class="col-xs-3">
                             <button type="submit" class="btn btn-default pull-right" name="type" value="create_first">
