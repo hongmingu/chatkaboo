@@ -4,6 +4,8 @@
     <title>Demo</title>
     {% include 'others/header_static.html' %}
     {% load static from staticfiles %}
+    <script src="{% static 'js/navbar.js' %}"></script>
+
     <link href="https://fonts.googleapis.com/css?family=Tauri" rel="stylesheet">
     {% if user.is_authenticated %}
     {% else %}
@@ -14,14 +16,11 @@
         @media screen and (max-width: 767px) {
             /* 모바일에 사용될 스타일 시트를 여기에 작성합니다. */
             .mobile_display_none { display: none; }
-            .mobile_display_block { display: block; }
         }
-
         @media screen and (min-width: 768px) {
             .desktop_display_none { display: none; }
-            .desktop_display_block { display: block; }
         }
-        /* 드랍다운 메뉴 관련 */
+        /* dropdown-menu */
         .navbar-default .navbar-nav > .open > a, .navbar-default .navbar-nav > .open > a:focus, .navbar-default .navbar-nav > .open > a:hover {
             background-color: transparent !important;
         }
@@ -34,7 +33,7 @@
         }
         .nav>li{vertical-align:top}
 
-        /* 내브바 아이콘 설정 */
+        /* navbar-icon */
         .nav {
         //  display: flex;
             width: 100%;
@@ -62,16 +61,16 @@
                 float: left;
             }
         }
-        /* 모달 배경 지우기 */
+        /* Remove modal background overlay black */
         .modal-backdrop {
             opacity: 0 !important;
         }
-        /* 모달 점프 투 탑 막기 */
+        /* Prevent modal from jump to top */
         .modal-open {
             position: relative;
         }
 
-        /* 여긴 필요할 수도 있다 우선 지우진 않는다.
+        /* Maybe It is needed later
         .nav-bar li.dropdown a.dropdown-toggle {
             text-align: right;
         } */
@@ -101,14 +100,15 @@
 </head>
 <body>
 <!--navbar start-->
-<nav class="navbar navbar-default navbar-fixed-top navbar_base">
+<!--popover 유용하게 쓸 수 있을 것 같다-->
+<nav class="navbar navbar-default navbar-fixed-top navbar_base" style="background-color: #ffffff">
     <div class="container-fluid padding_right_0">
         <ul class="nav navbar-nav navbar_ul_base" style="max-height: 50px;">
-            <li><a href="#" style="padding: 15px;"><i class="glyphicon glyphicon-comment"></i></a></li>
+            <li><a href="#" style="padding: 15px;"><i class="glyphicon glyphicon-comment" style="color: #2ac31b"></i></a></li>
             <li><a href="#" style="padding: 15px;"><i class="glyphicon glyphicon-list-alt"></i></a></li>
-            <li><a href="#" style="padding: 15px;"><i class="glyphicon glyphicon-user"></i></a></li>
+            <li id="nav_div_ul_li_bsearch"><a href="#" style="padding: 15px;"><i class="glyphicon glyphicon-user"></i></a></li>
             <li>
-                <form class="navbar-form navbar-left mobile_display_none">
+                <form class="navbar-form navbar-left mobile_display_none" style="margin-top: 10px; margin-bottom: 10px;">
                     <div class="input-group input-group-sm" style="">
                         <input class="form-control" placeholder="Search" id="searchbar_desktop" type="text">
                         <div class="input-group-btn">
@@ -118,29 +118,12 @@
                     </div>
                 </form>
             </li>
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown" style="padding: 15px; text-align: left">
-                    <i class="glyphicon glyphicon-option-horizontal"></i>
-                </a>
-                <ul class="dropdown-menu" style="width: 100%;">
-                    <li>
-                        <form class="navbar-form" style="width: 100%; margin: auto">
-                        <div class="input-group input-group-sm">
-                            <input class="form-control" placeholder="Search" id="searchbar" type="text">
-                            <div class="input-group-btn">
-                                <i class="btn btn-default"><i class="glyphicon glyphicon-search"></i>
-                                </i>
-                            </div>
-                        </div>
-                        </form>
-                    </li>
-                </ul>
-            </li>
+
             <li class="nav_li_last_options dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" style="padding: 15px;">
                     <i class="glyphicon glyphicon-option-horizontal"></i>
                 </a>
-                <ul class="dropdown-menu dropdown_menu_base">
+                <ul class="dropdown-menu dropdown_menu_base" style="background-color: white; border-radius: 0; border: 2px solid #2ac31b; box-shadow: #2ac31b">
                     <li><a href="#">HTML</a></li>
                     <li><a href="#">CSS</a></li>
                     <li><a href="#">JavaScript</a></li>
@@ -153,41 +136,23 @@
 </nav>
 
 <!--navbar for search start jquery로 이 navbar 자체를 지웠다 열었다 함 + affix 설정 알아보기 fixed-top 옵션 때문에 어디에 추가하건 위치는 같게 나올 것이다.-->
-<nav class="navbar navbar-default navbar-fixed-top navbar_search_base" id="navbar_search" style="top: 50px">
-    <div class="container-fluid padding_right_0" style="padding-left: 0px;">
-        <form class="navbar-form navbar_search_form_base" style="width: 100%; margin: auto">
-        <div class="input-group input-group-sm">
-            <input class="form-control" placeholder="Search" id="searchbar" type="text">
-            <div class="input-group-btn">
-                <i class="btn btn-default"><i class="glyphicon glyphicon-search"></i>
-                </i>
-            </div>
-        </div>
-        </form>
-    </div>
-</nav>
-<button id="btn_navssbar">navbar</button><br>
-<button id="btn_navssbar">navbar</button><br>
-<button id="btn_navssbar">navbar</button><br>
-<button id="btn_navssbar">navbar</button><br>
-<button id="btn_navssbar">navbar</button><br>
-<button id="btn_navssbar">navbar</button><br>
-<button id="btn_navssbar">navbar</button><br>
-<button id="btn_navssbar">navbar</button><br>
-<button id="btn_navssbar">navbar</button><br>
-<button id="btn_navssbar">navbar</button><br>
-<button id="btn_navssbar">navbar</button><br>
-<button id="btn_navssbar">navbar</button><br>
-<button id="btn_navssbar">navbar</button><br>
-<button id="btn_navssbar">navbar</button><br>
-<button id="btn_navssbar">navbar</button><br>
 
 <!--navbar end-->
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-xs-12">
-            <div style="background-color: yellow; height: 400px;"></div>
+<div class="container-fluid" style="margin-top: 50px;">
+    <div class="row"  style="background-color: #d4ffd5">
+        <div class="col-xs-12 col-sm-offset-2 col-sm-8  col-md-offset-3 col-md-6">
+            <div class="row">
+                            <div class="" style="background-color: #ff0c3f; height: 400px; margin-top: 15px;"></div>
 
+            </div>
+            <div class="row">
+                            <div class="" style="background-color: #ff0c3f; height: 400px; margin-top: 15px;"></div>
+
+            </div>
+            <div class="row">
+                            <div class="" style="background-color: #ff0c3f; height: 400px; margin-top: 15px;"></div>
+
+            </div>
         </div>
     </div>
 </div>
@@ -212,24 +177,12 @@
 
     </div>
 </div>
-<button id="btn_navbar">navbar</button>
 </body>
 <script>
-    $(document).ready(function () {
-        $("#btn_navbar").click(function () {
-           if ($("#navbar_search").length) {
-               $("#navbar_search").remove()
-           }
-           else {
-
-           }
-       });
-
-  // do something here
-        //$("#a_search_modal").click(function () {
-        //    $("#div_modal_search").modal();
-        //
-        //});
-    });
+if (window.WebSocket){
+     console.log("BROWSER SUPPORTED");
+} else {
+     console.log("BROWSER NOT SUPPORTED");
+}
 </script>
 </html>
