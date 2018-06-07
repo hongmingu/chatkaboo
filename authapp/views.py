@@ -119,23 +119,11 @@ def main_create_log_in(request):
                 'username': username,
                 'email': email,
             }
+            username = username.lower()
 
             # Integrity UserEmail and UserUsername
 
-            primary_email_exist = UserPrimaryEmail.objects.filter(email=email).exists()
-            if primary_email_exist:
-                return render_with_clue_loginform_createform(request, 'authapp/main_first.html',
-                                                             texts.EMAIL_ALREADY_USED, LoginForm(), UserCreateForm(data))
 
-            user_text_name_failure = user_text_name_failure_validate(name)
-            if user_text_name_failure:
-                clue_message = None
-                if user_text_name_failure is 1:
-                    clue_message = texts.USER_TEXT_NAME_LENGTH_PROBLEM
-                elif user_text_name_failure is 2:
-                    clue_message = texts.USER_TEXT_NAME_BANNED
-                return render_with_clue_loginform_createform(request, 'authapp/main_first.html',
-                                                             clue_message, LoginForm(), UserCreateForm(data))
 
             user_username_exist = UserUsername.objects.filter(username=username).exists()
             if user_username_exist:
@@ -154,6 +142,27 @@ def main_create_log_in(request):
                 elif username_failure is 4:
                     clue_message = texts.USERNAME_BANNED
 
+                return render_with_clue_loginform_createform(request, 'authapp/main_first.html',
+                                                             clue_message, LoginForm(), UserCreateForm(data))
+
+            primary_email_exist = UserPrimaryEmail.objects.filter(email=email).exists()
+            if primary_email_exist:
+                return render_with_clue_loginform_createform(request, 'authapp/main_first.html',
+                                                             texts.EMAIL_ALREADY_USED, LoginForm(), UserCreateForm(data))
+            email_failure = email_failure_validate(email)
+            if email_failure:
+                clue_message = None
+                if email_failure is 1:
+                    clue_message = texts.EMAIL_UNAVAILABLE
+                elif email_failure is 2:
+                    clue_message = texts.EMAIL_LENGTH_OVER_255
+                return render_with_clue_loginform_createform(request, 'authapp/main_first.html',
+                                                             clue_message, LoginForm(), UserCreateForm(data))
+            user_text_name_failure = user_text_name_failure_validate(name)
+            if user_text_name_failure:
+                clue_message = None
+                if user_text_name_failure is 1:
+                    clue_message = texts.USER_TEXT_NAME_LENGTH_PROBLEM
                 return render_with_clue_loginform_createform(request, 'authapp/main_first.html',
                                                              clue_message, LoginForm(), UserCreateForm(data))
 
@@ -176,6 +185,7 @@ def main_create_log_in(request):
                 'username': username,
                 'email': email,
             }
+            username = username.lower()
 
             # validating username and password
 
@@ -183,6 +193,8 @@ def main_create_log_in(request):
             if user_username_exist:
                 return render_with_clue_loginform_createform(request, 'authapp/main_second.html',
                                                              texts.USERNAME_ALREADY_USED, LoginForm(), UserCreateForm(data))
+
+
 
             username_failure = username_failure_validate(username)
             if username_failure:
@@ -213,7 +225,13 @@ def main_create_log_in(request):
                 return render_with_clue_loginform_createform(request, 'authapp/main_second.html',
                                                              clue_message, LoginForm(), UserCreateForm(data))
 
-
+            user_text_name_failure = user_text_name_failure_validate(name)
+            if user_text_name_failure:
+                clue_message = None
+                if user_text_name_failure is 1:
+                    clue_message = texts.USER_TEXT_NAME_LENGTH_PROBLEM
+                return render_with_clue_loginform_createform(request, 'authapp/main_second.html',
+                                                             clue_message, LoginForm(), UserCreateForm(data))
             # password 조건
             password_failure = password_failure_validate(username, password, password_confirm)
             if password_failure:
@@ -238,7 +256,7 @@ def main_create_log_in(request):
                 new_username = form.cleaned_data['username']
                 new_password = form.cleaned_data['password']
                 new_email = form.cleaned_data['email']
-
+                new_username = new_username.lower()
                 try:
                     with transaction.atomic():
 
@@ -326,7 +344,7 @@ def main_create_log_in(request):
                 # End Transaction
                 except Exception:
                     return render_with_clue_loginform_createform(request, 'authapp/main_second.html',
-                                                                 'error', LoginForm(),
+                                                                 texts.CREATING_USER_EXTRA_ERROR, LoginForm(),
                                                                  UserCreateForm(data))
 
                 login(request, new_user_create)
@@ -335,7 +353,7 @@ def main_create_log_in(request):
                 return redirect(reverse('baseapp:user_main', kwargs={'user_username': new_user_username.username}))
             else:
                 return render_with_clue_loginform_createform(request, 'authapp/main_second.html',
-                                                             'error2', LoginForm(),
+                                                             texts.CREATING_USER_EXTRA_ERROR, LoginForm(),
                                                              UserCreateForm(data))
 
         elif request.POST['type'] == 'log_in':
@@ -378,15 +396,14 @@ def main_create_log_in(request):
 
                         if user is not None:
 
-                            login(request, user)
-                            print('1')
                             try:
                                 user_delete = UserDelete.objects.get(user=user)
                             except UserDelete.DoesNotExist:
                                 user_delete = None
                             if user_delete is not None:
                                 user_delete.delete()
-                                print('2')
+
+                            login(request, user)
 
                             ####################################################
                             ####################################################
@@ -425,6 +442,7 @@ def username_change(request):
                 try:
                     with transaction.atomic():
                         new_username = request.POST['username']
+                        new_username = new_username.lower()
                         exist_user_username = UserUsername.objects.filter(username=new_username).exists()
                         if exist_user_username is not None:
                             return clue_json_response(0, texts.USERNAME_ALREADY_USED)
@@ -643,7 +661,6 @@ def password_change(request):
                     with transaction.atomic():
                         new_password = form.cleaned_data['new_password']
                         new_password_confirm = form.cleaned_data['new_password_confirm']
-                        # password 조건
                         # password 조건
                         password_failure = password_failure_validate(username, new_password, new_password_confirm)
                         if password_failure:

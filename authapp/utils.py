@@ -53,9 +53,6 @@ def username_failure_validate(username):
 def user_text_name_failure_validate(user_text_name):
     if not (1 <= len(user_text_name) <= 30):
         return 1
-    from authapp import banned
-    if user_text_name in banned.BANNED_USER_TEXT_NAME_LIST:
-        return 2
     return 0
 
 

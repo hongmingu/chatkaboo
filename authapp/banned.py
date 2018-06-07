@@ -3,13 +3,5 @@ BANNED_PASSWORD_LIST = [
     '01234567', '012345678', '0123456789', 'laymei', '111111', 'aaaaaa'
 ]
 BANNED_USERNAME_LIST = [
-    'admin', 'chatkaboo', 'administrator'
-]
-
-BANNED_USERNAME_LIST_NOT_COMPLETELY = [
-    'admin', 'administrator', 'master', 'manager'
-]
-
-BANNED_USER_TEXT_NAME_LIST = [
     'chatkaboo',
 ]

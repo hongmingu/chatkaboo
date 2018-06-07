@@ -19,6 +19,7 @@ class EmailOrUsernameAuthBackend(ModelBackend):
             # user = User.objects.get(email=username)
             # kwargs = {'email': username}
         else:
+            username = username.lower()
             try:
                 user_object = UserUsername.objects.get(username=username)
             except UserUsername.DoesNotExist:

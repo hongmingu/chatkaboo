@@ -1,4 +1,4 @@
-$(document).ready(function() {
+$(function () {
 // csrf set
     function getCookie(name) {
         var cookieValue = null;
@@ -30,3 +30,4 @@ $(document).ready(function() {
         }
     });
 });
+
