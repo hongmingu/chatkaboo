@@ -352,6 +352,7 @@ def main_create_log_in(request):
                 ####################################################
                 return redirect(reverse('baseapp:user_main', kwargs={'user_username': new_user_username.username}))
             else:
+                # 여기 로그인 된 경우 작업 해야 한다. 자동으로 기본화면으로 넘어가도록 하라.
                 return render_with_clue_loginform_createform(request, 'authapp/main_second.html',
                                                              texts.CREATING_USER_EXTRA_ERROR, LoginForm(),
                                                              UserCreateForm(data))
@@ -652,44 +653,52 @@ def primary_email_key_confirm(request, uid, token):
 
 def password_change(request):
     if request.method == "POST":
-        form = PasswordChangeForm(request.POST)
-        if form.is_valid():
-            username = request.user.userusername.username
-            user = authenticate(username=username, password=form.cleaned_data['password'])
-            if user is not None:
-                try:
-                    with transaction.atomic():
-                        new_password = form.cleaned_data['new_password']
-                        new_password_confirm = form.cleaned_data['new_password_confirm']
-                        # password 조건
-                        password_failure = password_failure_validate(username, new_password, new_password_confirm)
-                        if password_failure:
-                            clue_message = None
-                            if password_failure is 1:
-                                clue_message = texts.PASSWORD_NOT_THE_SAME
-                            elif password_failure is 2:
-                                clue_message = texts.PASSWORD_LENGTH_PROBLEM
-                            elif password_failure is 3:
-                                clue_message = texts.PASSWORD_EQUAL_USERNAME
-                            elif password_failure is 4:
-                                clue_message = texts.PASSWORD_BANNED
-                            return render_with_clue_one_form(request, 'authapp/password_check.html',
-                                                             clue_message, PasswordChangeForm())
+        if request.user.is_authenticated:
 
-                        user.password = new_password
-                        user.save()
-                        return render_with_clue_one_form(request, 'authapp/password_check.html', texts.PASSWORD_CHANGED,
+            form = PasswordChangeForm(request.POST)
+            if form.is_valid():
+                username = request.user.userusername.username
+                user = authenticate(username=username, password=form.cleaned_data['password'])
+                if user is not None:
+                    try:
+                        with transaction.atomic():
+                            new_password = form.cleaned_data['new_password']
+                            new_password_confirm = form.cleaned_data['new_password_confirm']
+                            # password 조건
+                            password_failure = password_failure_validate(username, new_password, new_password_confirm)
+                            if password_failure:
+                                clue_message = None
+                                if password_failure is 1:
+                                    clue_message = texts.PASSWORD_NOT_THE_SAME
+                                elif password_failure is 2:
+                                    clue_message = texts.PASSWORD_LENGTH_PROBLEM
+                                elif password_failure is 3:
+                                    clue_message = texts.PASSWORD_EQUAL_USERNAME
+                                elif password_failure is 4:
+                                    clue_message = texts.PASSWORD_BANNED
+                                return render_with_clue_one_form(request, 'authapp/password_change.html',
+                                                                 clue_message, PasswordChangeForm())
+
+                            user.password = new_password
+                            user.save()
+                            return render_with_clue_one_form(request, 'authapp/password_change_complete.html', texts.PASSWORD_CHANGED,
+                                                             PasswordChangeForm())
+                    except Exception:
+                        return render_with_clue_one_form(request, 'authapp/password_change.html', texts.UNEXPECTED_ERROR,
                                                          PasswordChangeForm())
-                except Exception:
-                    return render_with_clue_one_form(request, 'authapp/password_check.html', texts.UNEXPECTED_ERROR,
-                                                     PasswordChangeForm())
 
+                else:
+                    return render_with_clue_one_form(request, 'authapp/password_change.html', texts.PASSWORD_AUTH_FAILED, PasswordChangeForm())
             else:
-                return render_with_clue_one_form(request, 'authapp/password_check.html', texts.PASSWORD_AUTH_FAILED, PasswordChangeForm())
+                return render_with_clue_one_form(request, 'authapp/password_change.html', texts.PASSWORD_AUTH_FAILED, PasswordChangeForm())
         else:
-            return render_with_clue_one_form(request, 'authapp/password_check.html', texts.PASSWORD_AUTH_FAILED, PasswordChangeForm())
+            return redirect(reverse('baseapp:main_create_log_in'))
+
     else:
-        return render_with_clue_one_form(request, 'authapp/password_check.html', None, PasswordChangeForm())
+        if request.user.is_authenticated:
+            return render_with_clue_one_form(request, 'authapp/password_change.html', None, PasswordChangeForm())
+        else:
+            return redirect(reverse('baseapp:main_create_log_in'))
 
 
 def password_reset(request):
@@ -742,8 +751,8 @@ def password_reset(request):
 
                 # Send Email
 
-                subject = '[' + texts.SITE_NAME + ']' + texts.EMAIL_CONFIRMATION_SUBJECT
-                message = render_to_string('authapp/_user_password_reset_key.html', {
+                subject = '[' + texts.SITE_NAME + ']' + texts.PASSWORD_RESET_SUBJECT
+                message = render_to_string('authapp/_password_reset_email.html', {
                     'username': user.userusername.username,
                     'name': user.usertextname.name,
                     'email': user_primary_email.email,
@@ -760,14 +769,12 @@ def password_reset(request):
                     recipient_list=email_list
                 )
 
-                return render_with_clue_one_form(request, 'authapp/password_reset.html',
-                                                 texts.PASSWORD_RESET_EMAIL_SENT, PasswordResetForm())
+                return render(request, 'authapp/password_reset_email_sent.html')
         except Exception:
             pass
 
     else:
-        form = PasswordResetForm()
-        return render(request, 'authapp/password_reset.html', {'form': form})
+        return render_with_clue_one_form(request, 'authapp/password_reset.html', None, PasswordResetForm())
 
 
 def password_reset_key_confirm(request, uid, token):
@@ -776,15 +783,15 @@ def password_reset_key_confirm(request, uid, token):
             user_password_reset_token = UserPasswordResetToken.objects.get(uid=uid, token=token)
         except UserPasswordResetToken.DoesNotExist:
             clue = {'message': texts.KEY_UNAVAILABLE}
-            return render(request, 'authapp/primary_email_key_confirm.html', {'clue': clue})
+            return render(request, 'authapp/password_reset_key_confirm_error.html', {'clue': clue})
 
-        if not (user_password_reset_token is not None
-                and not ((now() - user_password_reset_token.created) <= timedelta(seconds=60 * 10))
-                and (UserPasswordResetToken.objects.filter(
-                    user_primary_email=user_password_reset_token.user_primary_email
-                ).first() == user_password_reset_token)):
+        if user_password_reset_token is None \
+                or ((now() - user_password_reset_token.created) > timedelta(seconds=60 * 10)) \
+                or not (UserPasswordResetToken.objects.filter(
+                user_primary_email=user_password_reset_token.user_primary_email
+                ).last() == user_password_reset_token):
             clue = {'message': texts.KEY_EXPIRED}
-            return render(request, 'authapp/primary_email_key_confirm.html', {'clue': clue})
+            return render(request, 'authapp/password_reset_key_confirm_error.html', {'clue': clue})
 
         try:
             uid = force_text(urlsafe_base64_decode(uid))
@@ -794,32 +801,54 @@ def password_reset_key_confirm(request, uid, token):
             user = None
             user_primary_email = None
 
-        if not (user is not None and user_primary_email is not None
-                and user_password_reset_token is not None
-                and account_activation_token.check_token(user, token)):
+        if user is None or user_primary_email is None:
             clue = {'message': texts.KEY_EXPIRED}
-            return render(request, 'authapp/primary_email_key_confirm.html', {'clue': clue})
+            return render(request, 'authapp/password_reset_key_confirm_error.html', {'clue': clue})
 
         # 이러면 비밀번호 새로 입력할 창을 준다.
-        form = PasswordChangeForm()
-        return render(request, 'authapp/password_change_from_key.html', {'clue': clue, 'form':form})
+        form = PasswordResetConfirmForm()
+
+        return render(request, 'authapp/password_reset_key_confirmed_and_reset.html', {'form': form})
+
     # 여기선 새 패스워드 값을 받아서 처리한다.
     elif request.method == "POST":
-        form = PasswordChangeForm(request.POST)
+        form = PasswordResetConfirmForm(request.POST)
         if form.is_valid():
             new_password = form.cleaned_data['password']
             new_password_confirm = form.cleaned_data['password_confirm']
 
             try:
                 with transaction.atomic():
-                    uid = force_text(urlsafe_base64_decode(uid))
-                    try:
-                        user = User.objects.get(pk=uid)
-                    except User.DoesNotExist:
-                        form = PasswordChangeForm()
-                        return render_with_clue_one_form(request, 'authapp/primary_email_key_confirm.html', texts.USER_NOT_EXIST, form)
 
-                    password_failure = password_failure_validate(user.userusername.username, new_password, new_password_confirm)
+                    try:
+                        user_password_reset_token = UserPasswordResetToken.objects.get(uid=uid, token=token)
+                    except UserPasswordResetToken.DoesNotExist:
+                        clue = {'message': texts.KEY_UNAVAILABLE}
+                        return render(request, 'authapp/password_reset_key_confirm_error.html', {'clue': clue})
+
+                    if user_password_reset_token is None \
+                            or ((now() - user_password_reset_token.created) > timedelta(seconds=60 * 10)) \
+                            or not (UserPasswordResetToken.objects.filter(
+                            user_primary_email=user_password_reset_token.user_primary_email
+                            ).last() == user_password_reset_token):
+                        clue = {'message': texts.KEY_EXPIRED}
+                        return render(request, 'authapp/password_reset_key_confirm_error.html', {'clue': clue})
+
+                    try:
+                        uid = force_text(urlsafe_base64_decode(uid))
+                        user = User.objects.get(pk=uid)
+                        user_primary_email = user_password_reset_token.user_primary_email
+                    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+                        user = None
+                        user_primary_email = None
+
+                    if user is None or user_primary_email is None:
+                        clue = {'message': texts.KEY_EXPIRED}
+                        return render(request, 'authapp/password_reset_key_confirm_error.html', {'clue': clue})
+
+                    password_failure = password_failure_validate(user.userusername.username,
+                                                                 new_password,
+                                                                 new_password_confirm)
                     if password_failure:
                         clue_message = None
                         if password_failure is 1:
@@ -830,55 +859,81 @@ def password_reset_key_confirm(request, uid, token):
                             clue_message = texts.PASSWORD_EQUAL_USERNAME
                         elif password_failure is 4:
                             clue_message = texts.PASSWORD_BANNED
-                        return render_with_clue_one_form(request, 'authapp/primary_email_key_confirm.html',
+                        return render_with_clue_one_form(request, 'authapp/password_reset_key_confirmed_and_reset.html',
                                                          clue_message, PasswordChangeForm())
 
                     user.password = new_password
                     user.save()
 
-                    return redirect('authapp:password_reset_changed_need_login')
+                    return render(request, 'authapp/password_reset_completed.html')
+
             except Exception:
-                return render_with_clue_one_form(request, 'authapp/primary_email_key_confirm.html',
+                return render_with_clue_one_form(request, 'authapp/password_reset_key_confirm_error.html',
                                                  texts.UNEXPECTED_ERROR, PasswordChangeForm())
 
 
 def deactivate_user(request):
     if request.method == "POST":
-        form = PasswordCheckBeforeDeactivationForm(request.POST)
-        if form.is_valid():
-            user = authenticate(username=request.user.userusername.username,
-                                password=form.cleaned_data['password'])
-            if user is not None:
-                user.is_active = False
-                user.save()
-                logout(request)
-                return render(request, 'authapp/user_deactivate_done.html')
+        if request.user.is_authenticated:
+
+            form = PasswordCheckBeforeDeactivationForm(request.POST)
+            if form.is_valid():
+                user = authenticate(username=request.user.userusername.username,
+                                    password=form.cleaned_data['password'])
+                if user is not None:
+                    try:
+                        with transaction.atomic():
+                            user.is_active = False
+                            user.save()
+                            logout(request)
+                            return render(request, 'authapp/deactivate_user_done.html')
+                    except Exception:
+                        return render_with_clue_one_form(request, 'authapp/deactivate_user.html',
+                                                         texts.UNEXPECTED_ERROR,
+                                                         PasswordCheckBeforeDeactivationForm())
+                else:
+                    return render_with_clue_one_form(request, 'authapp/deactivate_user.html', texts.PASSWORD_AUTH_FAILED, PasswordCheckBeforeDeactivationForm())
             else:
-                return render_with_clue_one_form(request, 'authapp/user_deactivate.html', texts.PASSWORD_AUTH_FAILED, PasswordCheckBeforeDeactivationForm())
+                return render_with_clue_one_form(request, 'authapp/deactivate_user.html', texts.PASSWORD_AUTH_FAILED,
+                                                 PasswordCheckBeforeDeactivationForm())
         else:
-            return render_with_clue_one_form(request, 'authapp/user_deactivate.html', texts.PASSWORD_AUTH_FAILED,
-                                             PasswordCheckBeforeDeactivationForm())
+            return redirect(reverse('baseapp:main_create_log_in'))
     else:
-        form = PasswordCheckBeforeDeactivationForm()
-        return render(request, 'authapp/user_deactivate.html', {'form': form})
+        if request.user.is_authenticated:
+            form = PasswordCheckBeforeDeactivationForm()
+            return render(request, 'authapp/deactivate_user.html', {'form': form})
+        else:
+            return redirect(reverse('baseapp:main_create_log_in'))
 
 
 def delete_user(request):
     if request.method == "POST":
-        form = PasswordCheckBeforeDeleteForm(request.POST)
-        if form.is_valid():
-            user = authenticate(username=request.user.userusername.username,
-                                password=form.cleaned_data['password'])
-            if user is not None:
-                user.is_active = False
-                user.save()
-                logout(request)
-                return render(request, 'authapp/user_delete_done.html')
+        if request.user.is_authenticated:
+
+            form = PasswordCheckBeforeDeleteForm(request.POST)
+            if form.is_valid():
+                user = authenticate(username=request.user.userusername.username,
+                                    password=form.cleaned_data['password'])
+
+                if user is not None:
+                    try:
+                        with transaction.atomic():
+                            UserDelete.objects.create(user=user)
+                            logout(request)
+                            return render(request, 'authapp/delete_user_done.html')
+                    except Exception:
+                        return render_with_clue_one_form(request, 'authapp/delete_user.html', texts.UNEXPECTED_ERROR, PasswordCheckBeforeDeleteForm())
+                else:
+                    return render_with_clue_one_form(request, 'authapp/delete_user.html', texts.PASSWORD_AUTH_FAILED, PasswordCheckBeforeDeleteForm())
             else:
-                return render_with_clue_one_form(request, 'authapp/user_delete.html', texts.PASSWORD_AUTH_FAILED, PasswordCheckBeforeDeleteForm())
+                return render_with_clue_one_form(request, 'authapp/delete_user.html', texts.PASSWORD_AUTH_FAILED,
+                                                 PasswordCheckBeforeDeleteForm())
         else:
-            return render_with_clue_one_form(request, 'authapp/user_delete.html', texts.PASSWORD_AUTH_FAILED,
-                                             PasswordCheckBeforeDeleteForm())
+            return redirect(reverse('baseapp:main_create_log_in'))
     else:
-        form = PasswordCheckBeforeDeleteForm()
-        return render(request, 'authapp/user_delete.html', {'form': form})
+        if request.user.is_authenticated:
+            form = PasswordCheckBeforeDeleteForm()
+            return render(request, 'authapp/delete_user.html', {'form': form})
+        else:
+            return redirect(reverse('baseapp:main_create_log_in'))
+

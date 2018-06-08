@@ -64,9 +64,9 @@ class PasswordResetForm(forms.ModelForm):
 
 
 class PasswordResetConfirmForm(forms.ModelForm):
-    new_password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control',
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control',
                                                                      'placeholder': 'new Password'}))
-    new_password_confirm = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control',
+    password_confirm = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control',
                                                                              'placeholder': 'new Password confirm'}))
 
     class Meta:

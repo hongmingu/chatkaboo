@@ -38,8 +38,8 @@ def test2(request):
     else:
         # cache_data = cache.get_or_set('render', None)
         return render(request, 'website/main/test2.html')
-I hope the next gen of social media will allow a little bit more control over how we view our feeds.
-
+# I hope the next gen of social media will allow a little bit more control over how we view our feeds.
+# 6. Create Status Update Features
 def test(request):
     if request.method == "POST":
         pass
