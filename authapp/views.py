@@ -18,6 +18,7 @@ from django.utils.encoding import force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.timezone import now, timedelta
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.http import JsonResponse
 
 from authapp import options
 from authapp import texts
@@ -495,7 +496,7 @@ def primary_email_change(request):
                             if counter_if_loop <= 9:
 
                                 try:
-                                    uid = urlsafe_base64_encode(force_bytes(user.pk))
+                                    uid = urlsafe_base64_encode(force_bytes(user.pk)).decode()
                                     token = account_activation_token.make_token(user)
                                     print(str(token))
                                     UserPrimaryEmailAuthToken.objects.create(
@@ -565,7 +566,7 @@ def primary_email_key_send(request):
                             if counter_if_loop <= 9:
 
                                 try:
-                                    uid = urlsafe_base64_encode(force_bytes(user.pk))
+                                    uid = urlsafe_base64_encode(force_bytes(user.pk)).decode()
                                     token = account_activation_token.make_token(user)
 
                                     UserPrimaryEmailAuthToken.objects.create(
@@ -733,14 +734,19 @@ def password_reset(request):
                     if counter_if_loop <= 9:
 
                         try:
-                            uid = urlsafe_base64_encode(force_bytes(user.pk))
+                            print('log1')
+                            uid = urlsafe_base64_encode(force_bytes(user.pk)).decode()
+                            print('log2')
+
                             token = account_activation_token.make_token(user)
+                            print('log3')
 
                             UserPasswordResetToken.objects.create(
                                 user_primary_email=user_primary_email,
                                 uid=uid,
                                 token=token,
                             )
+                            print('log4')
                             checker_while_loop = 1
                         except IntegrityError as e:
                             if 'UNIQUE constraint' in str(e.args):
@@ -750,8 +756,10 @@ def password_reset(request):
                                                                  texts.UNEXPECTED_ERROR, PasswordResetForm())
 
                 # Send Email
-
+                print('log5')
                 subject = '[' + texts.SITE_NAME + ']' + texts.PASSWORD_RESET_SUBJECT
+                print('log6')
+
                 message = render_to_string('authapp/_password_reset_email.html', {
                     'username': user.userusername.username,
                     'name': user.usertextname.name,
@@ -761,17 +769,21 @@ def password_reset(request):
                     'uid': uid,
                     'token': token,
                 })
+                print('log7')
 
                 email_list = [user_primary_email.email]
+                print('log8')
 
                 send_mail(
                     subject=subject, message=message, from_email=options.DEFAULT_FROM_EMAIL,
                     recipient_list=email_list
                 )
+                print('log9')
 
                 return render(request, 'authapp/password_reset_email_sent.html')
-        except Exception:
-            pass
+        except Exception as e:
+            print(str(e))
+            return render_with_clue_one_form(request, 'authapp/password_reset.html', None, PasswordResetForm())
 
     else:
         return render_with_clue_one_form(request, 'authapp/password_reset.html', None, PasswordResetForm())
@@ -937,3 +949,25 @@ def delete_user(request):
         else:
             return redirect(reverse('baseapp:main_create_log_in'))
 
+
+def settings(request):
+    if request.method == "GET":
+        if request.user.is_authenticated:
+            return render(request, 'authapp/settings.html')
+        else:
+            return redirect(reverse('baseapp:main_create_log_in'))
+
+
+def crop(request):
+    if request.method == "GET":
+
+        form = TestPhotoFrom()
+        return render(request, 'authapp/crop.html', {'form': form})
+    else:
+        if request.is_ajax():
+            form = TestPhotoFrom(request.POST, request.FILES)
+            if form.is_valid():
+                form.save()
+                return JsonResponse({'success': 'file_uploaded with: ' + 'on form_valid'})
+
+            return JsonResponse({'success': 'file_uploaded with: ' + 'failed form_valid'})

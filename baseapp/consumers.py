@@ -1,8 +1,8 @@
 from django.conf import settings
 
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
-'''
-class ChatConsumer(AsyncJsonWebsocketConsumer):
+
+class ReSettingsConsumer(AsyncJsonWebsocketConsumer):
     """
     This chat consumer handles websocket connections for chat clients.
 
@@ -25,8 +25,10 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         else:
             # Accept the connection
             await self.accept()
-        # Store which rooms the user has joined on this connection
-        self.rooms = set()
+            await self.channel_layer.group_add(
+                self.scope["user"].username,
+                self.channel_name,
+            )
 
     async def receive_json(self, content):
         """
@@ -37,31 +39,33 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         command = content.get("command", None)
         try:
             if command == "join":
+                pass
                 # Make them join the room
-                await self.join_room(content["room"])
+                # await self.join_room(content["room"])
             elif command == "leave":
+                pass
                 # Leave the room
-                await self.leave_room(content["room"])
+                # await self.leave_room(content["room"])
             elif command == "send":
-                await self.send_room(content["room"], content["message"])
-        except ClientError as e:
+                pass
+                # await self.send_room(content["room"], content["message"])
+        except Exception:
             # Catch any errors and send it back
-            await self.send_json({"error": e.code})
+            await self.send_json({"error": "websocket connection failed"})
 
     async def disconnect(self, code):
         """
         Called when the WebSocket closes for any reason.
         """
         # Leave all the rooms we are still in
-        for room_id in list(self.rooms):
-            try:
-                await self.leave_room(room_id)
-            except ClientError:
-                pass
+        await self.channel_layer.group_discard(
+            self.scope["user"].username,
+            self.channel_name,
+        )
 
     ##### Command helper methods called by receive_json
-
-    async def join_room(self, room_id):
+    '''
+        async def join_room(self, room_id):
         """
         Called by receive_json when someone sent a join command.
         """
@@ -80,10 +84,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         # Store that we're in the room
         self.rooms.add(room_id)
         # Add them to the group so they get room messages
-        await self.channel_layer.group_add(
-            room.group_name,
-            self.channel_name,
-        )
+
         # Instruct their client to finish opening the room
         await self.send_json({
             "join": str(room.id),
@@ -109,10 +110,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         # Remove that we're in the room
         self.rooms.discard(room_id)
         # Remove them from the group so they no longer get room messages
-        await self.channel_layer.group_discard(
-            room.group_name,
-            self.channel_name,
-        )
+
         # Instruct their client to finish closing the room
         await self.send_json({
             "leave": str(room.id),
@@ -179,12 +177,14 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                 "message": event["message"],
             },
         )
+    '''
+
 # websocket 에서도 성공 반응을 받을 수 있는가 ?
 # 받을 수 있다면 db처리랑 id number를 이용해 어느정도 채팅을 구현해 낼 수 있을 것이다. 웹소켓 반응이 그렇게 빠르지 않은 경우에 더 빠른 반응을 이용해서 쓰면 된다.
 # 웹소켓 지연은 1-2초이므로 체감상 차이가 거의 없어지게 할 수 있을 것이다.
 # F expression 을 이용하면 race condition 도 없어지게 할 수 있으니 괜찮을 것 같다. async def 들을 이용하면 될 것 같다. transaction 도 이용하자.
 
-
+'''
 from channels.db import database_sync_to_async
 
 # This decorator turns this function from a synchronous function into an async one
@@ -210,6 +210,6 @@ def get_room_or_error(room_id, user):
         raise ClientError("ROOM_ACCESS_DENIED")
     return room
 
+
+
 '''
-
-

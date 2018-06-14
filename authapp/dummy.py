@@ -40,6 +40,8 @@ def test2(request):
         return render(request, 'website/main/test2.html')
 # I hope the next gen of social media will allow a little bit more control over how we view our feeds.
 # 6. Create Status Update Features
+# 채팅방을 새로 만드는 게 아니라 유저목록(빈 대화 - 이렇게 빈 대화로 다 열어놔야 그룹열어도 어색하지않고 대화방이 이미 있는 상태라는 
+# 설정이 도움이 될 것 같다) 위에 필요한 목록이 뜨는 형식으로.
 def test(request):
     if request.method == "POST":
         pass

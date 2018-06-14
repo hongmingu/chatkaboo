@@ -16,3 +16,13 @@ admin.site.register(TestModel, TestModelAdmin)
 admin.site.register(TestModelLog, TestModelLogAdmin)
 
 '''
+admin.site.register(UserUsername)
+admin.site.register(UserTextName)
+admin.site.register(UserPrimaryEmail)
+admin.site.register(UserPrimaryEmailAuthToken)
+
+admin.site.register(UserPasswordResetToken)
+admin.site.register(UserDelete)
+admin.site.register(UserPhoto)
+
+admin.site.register(TestPhoto)

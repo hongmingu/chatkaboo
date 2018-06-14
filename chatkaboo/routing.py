@@ -3,6 +3,7 @@ from django.urls import path, re_path
 from channels.http import AsgiHandler
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
+from baseapp.consumers import ReSettingsConsumer
 
 
 
@@ -21,6 +22,7 @@ application = ProtocolTypeRouter({
     # add users and sessions - see http://channels.readthedocs.io/en/latest/topics/authentication.html
     "websocket": AuthMiddlewareStack(
         URLRouter([
+            re_path(r'^re_settings/socket/$', ReSettingsConsumer),
         ]),
     ),
 })

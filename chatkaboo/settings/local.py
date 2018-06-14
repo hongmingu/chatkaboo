@@ -1,5 +1,13 @@
 from .base import *
+import json
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+ROOT_DIR = os.path.dirname(BASE_DIR)
+SETTINGS_DIR = os.path.join(BASE_DIR, 'chatkaboo', 'settings')
+SETTINGS_FILE = os.path.join(SETTINGS_DIR, 'local_settings.json')
+
+with open(SETTINGS_FILE) as f:
+    settings_json = json.loads(f.read())
 
 DEBUG = True
 
@@ -54,12 +62,16 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media_dir')
 
 
+SMTPusername = settings_json['django']['SMTPusername']
+SMTPpassword = settings_json['django']['SMTPpassword']
+
+
 # Email-backend
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'email-smtp.us-west-2.amazonaws.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'AKIAIAZOHPBNGXLQVAGQ'
-EMAIL_HOST_PASSWORD = 'Ajf7T170acEYm4YMkpHK6sD1mp8pWGzHh58P2BZCO1ed'
+EMAIL_HOST_USER = SMTPusername
+EMAIL_HOST_PASSWORD = SMTPpassword
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = 'test-username@moneycurry.com'
 

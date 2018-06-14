@@ -4,6 +4,10 @@ from django.contrib.auth import get_user_model
 from django.conf import settings
 from authapp.models import UserUsername, UserPrimaryEmail
 
+from PIL import Image
+from django.core.files import File
+from .models import UserPhoto
+from .models import TestPhoto
 
 class UserCreateForm(forms.ModelForm):
 
@@ -101,3 +105,79 @@ class PasswordChangeWithUserPKForm(forms.Form):
         model = User
         fields = ['pk', 'password']
 
+
+class UserPhotoFrom(forms.ModelForm):
+    x = forms.FloatField(widget=forms.HiddenInput())
+    y = forms.FloatField(widget=forms.HiddenInput())
+    width = forms.FloatField(widget=forms.HiddenInput())
+    height = forms.FloatField(widget=forms.HiddenInput())
+
+    class Meta:
+        model = UserPhoto
+        fields = ('file', 'x', 'y', 'width', 'height', )
+
+    def save(self):
+        user_photo = super(UserPhotoFrom, self).save()
+
+        x = self.cleaned_data.get('x')
+        y = self.cleaned_data.get('y')
+        w = self.cleaned_data.get('width')
+        h = self.cleaned_data.get('height')
+
+        image = Image.open(user_photo.file)
+        cropped_image = image.crop((x, y, w+x, h+y))
+        resized_image = cropped_image.resize((200, 200), Image.ANTIALIAS)
+        resized_image.save(user_photo.file.path)
+
+        return user_photo
+
+
+class UserPhotoFrom(forms.ModelForm):
+    x = forms.FloatField(widget=forms.HiddenInput())
+    y = forms.FloatField(widget=forms.HiddenInput())
+    width = forms.FloatField(widget=forms.HiddenInput())
+    height = forms.FloatField(widget=forms.HiddenInput())
+
+    class Meta:
+        model = UserPhoto
+        fields = ('file', 'x', 'y', 'width', 'height', )
+
+    def save(self):
+        user_photo = super(UserPhotoFrom, self).save()
+
+        x = self.cleaned_data.get('x')
+        y = self.cleaned_data.get('y')
+        w = self.cleaned_data.get('width')
+        h = self.cleaned_data.get('height')
+
+        image = Image.open(user_photo.file)
+        cropped_image = image.crop((x, y, w+x, h+y))
+        resized_image = cropped_image.resize((200, 200), Image.ANTIALIAS)
+        resized_image.save(user_photo.file.path)
+
+        return user_photo
+
+
+class TestPhotoFrom(forms.ModelForm):
+    x = forms.FloatField(widget=forms.HiddenInput())
+    y = forms.FloatField(widget=forms.HiddenInput())
+    width = forms.FloatField(widget=forms.HiddenInput())
+    height = forms.FloatField(widget=forms.HiddenInput())
+
+    class Meta:
+        model = TestPhoto
+        fields = ('file', 'x', 'y', 'width', 'height', )
+
+    def save(self):
+        test_photo = super(TestPhotoFrom, self).save()
+        x = self.cleaned_data.get('x')
+        y = self.cleaned_data.get('y')
+        w = self.cleaned_data.get('width')
+        h = self.cleaned_data.get('height')
+
+        image = Image.open(test_photo.file)
+        cropped_image = image.crop((x, y, x + w, y + h))
+        resized_image = cropped_image.resize((100, 100), Image.ANTIALIAS)
+        resized_image.save(test_photo.file.path)
+
+        return test_photo

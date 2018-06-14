@@ -44,6 +44,17 @@ class UserPrimaryEmail(models.Model):
         return "PrimaryEmail for %s" % self.user
 
 
+class UserPhoto(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+
+    file = models.ImageField()
+    updated = models.DateTimeField(auto_now=True)
+    created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return "PrimaryEmail for %s" % self.user
+
+
 class UserPrimaryEmailAuthToken(models.Model):
     user_primary_email = models.ForeignKey(UserPrimaryEmail, on_delete=models.CASCADE, null=True, blank=True)
     email = models.EmailField(max_length=255, unique=True)
@@ -85,3 +96,10 @@ class UserDelete(models.Model):
 
     def __str__(self):
         return "UserDelete for %s" % self.user.userusername.username
+
+
+class TestPhoto(models.Model):
+    file = models.ImageField()
+
+    def __str__(self):
+        return "TestPhoto for %s" % self.pk
