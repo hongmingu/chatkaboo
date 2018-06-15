@@ -57,7 +57,7 @@ class UserPhoto(models.Model):
 
 class UserPrimaryEmailAuthToken(models.Model):
     user_primary_email = models.ForeignKey(UserPrimaryEmail, on_delete=models.CASCADE, null=True, blank=True)
-    email = models.EmailField(max_length=255, unique=True)
+    email = models.EmailField(max_length=255)
 
     uid = models.CharField(max_length=64)
     token = models.CharField(max_length=34, unique=True)
@@ -71,7 +71,7 @@ class UserPrimaryEmailAuthToken(models.Model):
 
 class UserPasswordResetToken(models.Model):
     user_primary_email = models.ForeignKey(UserPrimaryEmail, on_delete=models.CASCADE, null=True, blank=True)
-    email = models.EmailField(max_length=255, unique=True)
+    email = models.EmailField(max_length=255)
 
     uid = models.CharField(max_length=64)
     token = models.CharField(max_length=34, unique=True)

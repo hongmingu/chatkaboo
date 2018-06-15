@@ -13,354 +13,95 @@
 
     <style>
 
-        @media screen and (max-width: 767px) {
-            /* 모바일에 사용될 스타일 시트를 여기에 작성합니다. */
-            .mobile_display_none { display: none; }
-        }
-        @media screen and (min-width: 768px) {
-            .desktop_display_none { display: none; }
-        }
-        /* dropdown-menu */
-        .navbar-default .navbar-nav > .open > a, .navbar-default .navbar-nav > .open > a:focus, .navbar-default .navbar-nav > .open > a:hover {
-            background-color: transparent !important;
-        }
-        .nav > li a.dropdown-toggle {
-            text-align: right;
-        }
-
-        .dropdown-menu {
-            min-width: 20px !important;
-        }
-        .nav>li{vertical-align:top}
-
-        /* navbar-icon */
-        .nav {
-        //  display: flex;
-            width: 100%;
-        }
-
-        .navbar-default .navbar-nav > li > a:focus, .navbar-default .navbar-nav > li > a:hover {
-            background-color: transparent;
-        }
-
-        .nav > li {
-            display: inline-block !important;
-        }
-
-        .nav_li_last_options {
-            float: right;
-        }
-
-        @media (min-width: 768px) {
-            .navbar-nav > li.nav_li_last_options {
-                float: right;
-            }
-        }
-        @media (min-width: 768px) {
-            .navbar-nav > li.nav_li_middle_toggle {
-                float: left;
-            }
-        }
-        /* Remove modal background overlay black */
-        .modal-backdrop {
-            opacity: 0 !important;
-        }
-        /* Prevent modal from jump to top */
-        .modal-open {
-            position: relative;
-        }
-
-        /* Maybe It is needed later
-        .nav-bar li.dropdown a.dropdown-toggle {
-            text-align: right;
-        } */
-        .padding_right_0 {
-            padding-right: 0;
-        }
-        .navbar_base {
-            background-color: transparent; max-height: 50px;
-        }
-        .navbar_ul_base {
-            margin-top: 0px;margin-bottom: 0px;padding-left: 0px;
-        }
-        .dropdown_menu_base {
-            z-index: 3; left: auto; right: 0;
-        }
-        .navbar_search_base {
-            background-color: transparent;max-height: 50px;top: 50px;display: block;border-bottom-width: 0px;z-index: 2;
-        }
-        .navbar_search_form_base {
-            border-top-width: 0px;border-bottom-width: 0px;margin-top: 0px;margin-left: 0px;margin-bottom: 0px;
-        }
-        .width_100_i {
-            width: 100%;
-        }
-
-        body{
-            height: 100%; background-color: #d4ffd5;
-        }
-        .div_base{background-color:white; padding: 15px; margin-top: 8px; margin-bottom: 7px; border-width: 1px; border-color: lightgray; border-style: solid; border-radius: 5px;
-        }
-
-        .a_link_no_deco:link
-    {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    .a_link_no_deco:visited
-    {
-      color: inherit;
-    }
-
-    .a_link_no_deco:hover
-    {
-      color: inherit;
-    }
-
-    .a_link_no_deco:active
-    {
-      color: inherit;
-    }
-
-
-    .clickable:hover
-    {
-      opacity: .7;
-    }
-
     </style>
 
 
 </head>
-<body>
+<body class="light_background_color height_100">
 <!--navbar start-->
-<!--popover 유용하게 쓸 수 있을 것 같다-->
-<nav class="navbar navbar-default navbar-fixed-top navbar_base" style="background-color: #ffffff">
-    <div class="container-fluid padding_right_0">
-        <ul class="nav navbar-nav navbar_ul_base" style="max-height: 50px;">
-            <li><a href="#" style="padding: 15px;"><i class="glyphicon glyphicon-comment" style="color: #2ac31b"></i></a></li>
-            <li><a href="#" style="padding: 15px;"><i class="glyphicon glyphicon-list-alt"></i></a></li>
-            <li id="nav_div_ul_li_bsearch"><a href="#" style="padding: 15px;"><i class="glyphicon glyphicon-user"></i></a></li>
-            <li>
-                <form class="navbar-form navbar-left mobile_display_none" style="margin-top: 10px; margin-bottom: 10px;">
-                    <div class="input-group input-group-sm" style="">
-                        <input class="form-control" placeholder="Search" id="searchbar_desktop" type="text">
-                        <div class="input-group-btn">
-                            <i class="btn btn-default"><i class="glyphicon glyphicon-search"></i>
-                            </i>
-                        </div>
-                    </div>
-                </form>
-            </li>
+{% include 'baseapp/_navbar.html' %}
 
-            <li class="nav_li_last_options dropdown">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown" style="padding: 15px;">
-                    <i class="glyphicon glyphicon-option-horizontal"></i>
-                </a>
-                <ul class="dropdown-menu dropdown_menu_base" style="background-color: white; border-radius: 0; border: 1px solid grey; box-shadow: #2ac31b">
-                    <li><a href="#">HTML</a></li>
-                    <li><a href="#">CSS</a></li>
-                    <li><a href="#">JavaScript</a></li>
-                </ul>
-            </li>
-
-
-        </ul>
-    </div>
-</nav>
-
-<!--navbar for search start jquery로 이 navbar 자체를 지웠다 열었다 함 + affix 설정 알아보기 fixed-top 옵션 때문에 어디에 추가하건 위치는 같게 나올 것이다.-->
-<!--필요한설정:
-
-비밀번호변경
-유저네임변경
-메일변경
-팔로우 항상허용 혹은 비허용-비공개
-
-네임변경
-프로필사진변경
-
-회원정지
-회원탈퇴
-
--->
 <!--navbar end-->
 <div class="container-fluid" style="margin-top: 50px;">
     <div class="row"  style="">
         <div class="col-xs-12 col-sm-offset-2 col-sm-8 col-md-offset-3 col-md-6">
-            <div class="row">
-                <div class="div_base" style="">
-                    <div class="row">
-                        <div class="col-xs-10">
-                            <p class="h4" style="">Password Change</p>
-                        </div>
+            <div class="row" id="main_content">
+                <div class="row div_base" style="border: 3px solid;">
+                    <div class="col-xs-10">
+                        <p class="h4" style="">Password Change</p>
+                    </div>
 
-                        <div class="col-xs-2">
-                            <p class="h5" style="float: right;"><a class="a_link_no_deco" href="#"><span class="clickable" style="background-color: green; color: white; padding: 10px;">heydd</span></a></p>
-                        </div>
+                    <div class="col-xs-2">
+                        <p class="h5" style="float: right;"><a class="" href="#"><span class="clickable" style="background-color: green; color: white; padding: 10px;">heydd</span></a></p>
                     </div>
                 </div>
+                <div class="row div_base" style="border: 3px solid; margin-right: 0px; margin-left: 0px;">
+                    <div class="col-xs-10">
+                        <p class="h4" style="">Password Change</p>
+                    </div>
 
+                    <div class="col-xs-2">
+                        <p class="h5" style="float: right;"><a class="" href="#"><span class="clickable" style="background-color: green; color: white; padding: 10px;">heydd</span></a></p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
+{% if user.is_active %}
+    <script defer>
+        $(function () {
+
+            $.ajax({
+                url:'/accounts/email_ask/',
+                type:'post',
+                dataType:'json',
+                cache:false,
+                data:{
+                    type:'ask'
+                },
+                success:function (data) {
+                        console.log(data.res)
+                    if (data.res === 0){
+                        console.log(data.res)
+                        var email_ask = '\n' +
+                            '        <p class="h4">It\'s not activated yet</p>\n' +
+                            '        <p class="h4"><a href="#"><span class="clickable padding_5 pastel_bc3">Resend email</span></a> <a href="#"><span class="clickable padding_5 pastel_bc3" id="btn_email_ask_close">Close</span></a></p>'
+                        $('#div_email_ask').append(email_ask)
+
+                        $('#btn_email_ask_close').click(function (e) {
+                            e.preventDefault();
+                            $.ajax({
+                                url:'/accounts/email_ask/',
+                                type:'post',
+                                dataType:'json',
+                                cache:false,
+                                data:{
+                                    type:'close'
+                                },
+                                success:function (data) {
+                                    if (data.res === 1){
+                                        $('#div_email_ask').remove()
+                                    }
+                                }
+                            });
+                        });
+                    }
+                }
+            });
+
+
+        })
+    </script>
+    <div id="div_email_ask" align="center">
+    </div>
+{% endif %}
 </body>
 <script>
 
     $(function () {
 
-        var browser_websocket;
-        var ready_state = false;
-
-        if(window.WebSocket){
-            browser_websocket = true
-        } else {
-            browser_websocket = false;
-            ready_state = false
-        }
-
-        // Correctly decide between ws:// and wss://
-        var ws_scheme = window.location.protocol == "https:" ? "wss" : "ws";
-        var ws_path = ws_scheme + '://' + window.location.host + "/chat/test1/";
-        console.log("Connecting to " + ws_path);
-        var socket;
-        if (browser_websocket === true){
-            socket = new ReconnectingWebSocket(ws_path);
-
-            // Helpful debugging
-            socket.onopen = function () {
-                console.log("Connected to chat socket");
-                console.log(websocket_on);
-                ready_state = true;
-            };
-            socket.onclose = function () {
-                console.log("Disconnected from chat socket");
-                console.log(websocket_on);
-                ready_state = false;
-            };
-
-            // Handle incoming messages
-            socket.onmessage = function (message) {
-                // Decode the JSON
-                console.log("Got websocket message " + message.data);
-                var data = JSON.parse(message.data);
-                // Handle errors
-                if (data.error) {
-                    alert(data.error);
-                    return;
-                }
-                if (data.hello){
-                    alert('hello is on')
-                    return;
-                } else {
-                    alert('hello is off')
-                    return;
-                }
-                // Handle joining
-                if (data.join) {
-                    console.log("Joining room " + data.join);
-                    var roomdiv = $(
-                            "<div class='room' id='room-" + data.join + "'>" +
-                            "<h2>" + data.title + "</h2>" +
-                            "<div class='messages'></div>" +
-                            "<form><input><button>Send</button></form>" +
-                            "</div>"
-                    );
-                    // Hook up send button to send a message
-                    roomdiv.find("form").on("submit", function () {
-                        socket.send(JSON.stringify({
-                            "command": "send",
-                            "room": data.join,
-                            "message": roomdiv.find("input").val()
-                        }));
-                        roomdiv.find("input").val("");
-                        return false;
-                    });
-                    $("#chats").append(roomdiv);
-                    // Handle leaving
-                } else if (data.leave) {
-                    console.log("Leaving room " + data.leave);
-                    $("#room-" + data.leave).remove();
-                    // Handle getting a message
-                } else if (data.message || data.msg_type != 0) {
-                    var msgdiv = $("#room-" + data.room + " .messages");
-                    var ok_msg = "";
-                    // msg types are defined in chat/settings.py
-                    // Only for demo purposes is hardcoded, in production scenarios, consider call a service.
-                    switch (data.msg_type) {
-                        case 0:
-                            // Message
-                            ok_msg = "<div class='message'>" +
-                                    "<span class='username'>" + data.username + "</span>" +
-                                    "<span class='body'>" + data.message + "</span>" +
-                                    "</div>";
-                            break;
-                        case 1:
-                            // Warning / Advice messages
-                            ok_msg = "<div class='contextual-message text-warning'>" + data.message +
-                                    "</div>";
-                            break;
-                        case 2:
-                            // Alert / Danger messages
-                            ok_msg = "<div class='contextual-message text-danger'>" + data.message +
-                                    "</div>";
-                            break;
-                        case 3:
-                            // "Muted" messages
-                            ok_msg = "<div class='contextual-message text-muted'>" + data.message +
-                                    "</div>";
-                            break;
-                        case 4:
-                            // User joined room
-                            ok_msg = "<div class='contextual-message text-muted'>" + data.username +
-                                    " joined the room!" +
-                                    "</div>";
-                            break;
-                        case 5:
-                            // User left room
-                            ok_msg = "<div class='contextual-message text-muted'>" + data.username +
-                                    " left the room!" +
-                                    "</div>";
-                            break;
-                        default:
-                            console.log("Unsupported message type!");
-                            return;
-                    }
-                    msgdiv.append(ok_msg);
-                    msgdiv.scrollTop(msgdiv.prop("scrollHeight"));
-                } else {
-                    console.log("Cannot handle message!");
-                }
-            };
-
-            // Says if we joined a room or not by if there's a div for it
-            inRoom = function (roomId) {
-                return $("#room-" + roomId).length > 0;
-            };
-
-            // Room join/leave
-            $("li.room-link").click(function () {
-                roomId = $(this).attr("data-room-id");
-                if (inRoom(roomId)) {
-                    // Leave room
-                    $(this).removeClass("joined");
-                    socket.send(JSON.stringify({
-                        "command": "leave",
-                        "room": roomId
-                    }));
-                } else {
-                    // Join room
-                    $(this).addClass("joined");
-                    socket.send(JSON.stringify({
-                        "command": "join",
-                        "room": roomId
-                    }));
-                }
-            });
-        }
     });
 </script>
 </html>

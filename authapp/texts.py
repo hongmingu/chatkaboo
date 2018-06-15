@@ -36,6 +36,7 @@ PASSWORD_EQUAL_USERNAME = 'password cannot be the same as username'
 PASSWORD_BANNED = 'It\'s unavailable password'
 PASSWORD_AUTH_FAILED = 'password auth has failed'
 PASSWORD_RESET_SUBJECT = 'Password reset email'
+PASSWORD_CHANGED = 'Password has been changed'
 
 CREATING_USER_EXTRA_ERROR = 'There is something wrong on creating user'
 CREATING_EMAIL_EXTRA_ERROR = 'There is something wrong on adding email'

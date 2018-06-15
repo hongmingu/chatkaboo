@@ -26,7 +26,7 @@ class ReSettingsConsumer(AsyncJsonWebsocketConsumer):
             # Accept the connection
             await self.accept()
             await self.channel_layer.group_add(
-                self.scope["user"].username,
+                'jey',
                 self.channel_name,
             )
 

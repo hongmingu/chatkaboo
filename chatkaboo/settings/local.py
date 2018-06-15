@@ -47,8 +47,8 @@ MIDDLEWARE = [
 ]
 # Authentication Backend
 AUTHENTICATION_BACKENDS = [
-    # 'authapp.backends.EmailOrUsernameAuthBackend',
-    'django.contrib.auth.backends.ModelBackend',
+    'authapp.backends.EmailOrUsernameAuthBackend',
+    # 'django.contrib.auth.backends.ModelBackend',
 ]
 #### Static settings
 STATIC_URL = '/static/'

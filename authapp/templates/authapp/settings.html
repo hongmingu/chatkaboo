@@ -6,7 +6,6 @@
     {% load static from staticfiles %}
     <script src="{% static 'js/navbar.js' %}"></script>
     <script src="{% static 'js/reconnecting-websocket.min.js' %}"></script>
-    <link rel="stylesheet" type="text/css" href="{% static "css/chatkaboo_style.css" %}">
 
 
 
@@ -112,7 +111,7 @@
 
                         </div>
                         <div class="col-xs-12">
-                            <p class="h4" style="" align="center"><a href="#"><span
+                            <p class="h4" style="" align="center"><a href="{% url 'authapp:password_change' %}"><span
                                     class="clickable pastel_bc1 padding_5">Password Change</span></a></p>
                         </div>
                         <div class="col-xs-12">

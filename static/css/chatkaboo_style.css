@@ -135,6 +135,8 @@
             border-color: whitesmoke;
             border-style: solid;
             border-radius: 3px;
+            margin-right: 0px;
+            margin-left: 0px;
         }
 
         a:link{
@@ -244,4 +246,7 @@
         }
         .pastel_bc3{
             background-color: #ed98a6;
+        }
+        .email_ask{
+            position: fixed; bottom: 0px; z-index: 1; width:100%; height: 80px; background-color: skyblue;
         }
