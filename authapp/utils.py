@@ -31,7 +31,7 @@ def get_or_none(queryset, *args, **kwargs):
         return None
 
 
-def username_failure_validate(username):
+def user_username_failure_validate(username):
     import re
     if not (re.match('^([A-Za-z0-9_](?:(?:[A-Za-z0-9_]|(?:\.(?!\.))){0,28}(?:[A-Za-z0-9_]))?)$', username)):
         return 1
@@ -56,7 +56,7 @@ def user_text_name_failure_validate(user_text_name):
     return 0
 
 
-def email_failure_validate(email):
+def user_primary_email_failure_validate(email):
     import re
     if not (re.match('[^@]+@[^@]+\.[^@]+', email)):
         return 1

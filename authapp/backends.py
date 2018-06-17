@@ -33,3 +33,5 @@ class EmailOrUsernameAuthBackend(ModelBackend):
         except User.DoesNotExist:
             return 3
 
+    def user_can_authenticate(self, user):
+        return True

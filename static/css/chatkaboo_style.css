@@ -247,6 +247,9 @@
         .pastel_bc3{
             background-color: #ed98a6;
         }
-        .email_ask{
+        .div_email_ask{
             position: fixed; bottom: 0px; z-index: 1; width:100%; height: 80px; background-color: skyblue;
+        }
+        .email_token_resend{
+            border: 1px solid red;
         }

@@ -34,6 +34,7 @@ class UserTextName(models.Model):
 
 class UserPrimaryEmail(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    is_permitted = models.BooleanField(default=False)
 
     email = models.EmailField(max_length=255, unique=True, null=True, blank=True)
 

@@ -1,5 +1,5 @@
 from django.urls import path, re_path
-from authapp import views
+from authapp import views, ajax_views
 
 app_name = 'authapp'
 
@@ -19,7 +19,10 @@ urlpatterns = [
     re_path(r'^settings/$', views.settings, name='settings'),
     re_path(r'^logout/$', views.log_out, name='log_out'),
     re_path(r'^crop/$', views.crop, name='crop'),
+
     re_path(r'^email_ask/$', views.email_ask, name='email_ask'),
+
+    # ------------------------------------------------------------------------------
 
     # re_path(r'^logout/$', views.log_out, name='log_out'),
     #

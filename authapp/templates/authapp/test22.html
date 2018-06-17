@@ -91,4 +91,40 @@
             });
         });
     </script>
+
+<script defer>
+    $(function () {
+
+        var namediv;
+        // Hook up send button to send a message
+        var id_num;
+        $('#span_username_change').click(function (e) {
+            e.preventDefault();
+            id_num = Math.floor((Math.random() * 100) + 1)
+            var namediv = $('                    <div class="row">\n'+
+            '                        <div class="col-xs-9 padding_top_5">\n' +
+            '                            <div class="input-group-lg">\n' +
+            '                                <input class="width_100_i" placeholder="current: '+'" type="text">\n' +
+            '                            </div>\n' +
+            '                        </div>\n' +
+            '                        <div class="col-xs-3">\n' +
+            '                            <p class="h4"><a href="#"><span id="span_name_change"\n' +
+            '                                    class="clickable padding_5 pastel_bc3">change</span></a></p> \n' +
+            '                        </div>\n' +
+            '                    </div>');
+
+            $("body").append(namediv);
+            namediv.find('span').on('click', function () {
+                alert(namediv.find("input").val());
+            });
+            alert(namediv.find("input").val());
+        })
+
+        $('#span_name_change').click(function (e) {
+            e.preventDefault();
+            alert(namediv.find("input").val());
+
+        })
+    })
+</script>
 </html>

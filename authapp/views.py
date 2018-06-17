@@ -131,7 +131,7 @@ def main_create_log_in(request):
                 return render_with_clue_loginform_createform(request, 'authapp/main_first.html',
                                                              texts.USERNAME_ALREADY_USED, LoginForm(), UserCreateForm(data))
 
-            username_failure = username_failure_validate(username)
+            username_failure = user_username_failure_validate(username)
             if username_failure:
                 clue_message = None
                 if username_failure is 1:
@@ -150,7 +150,7 @@ def main_create_log_in(request):
             if primary_email_exist:
                 return render_with_clue_loginform_createform(request, 'authapp/main_first.html',
                                                              texts.EMAIL_ALREADY_USED, LoginForm(), UserCreateForm(data))
-            email_failure = email_failure_validate(email)
+            email_failure = user_primary_email_failure_validate(email)
             if email_failure:
                 clue_message = None
                 if email_failure is 1:
@@ -195,7 +195,7 @@ def main_create_log_in(request):
                 return render_with_clue_loginform_createform(request, 'authapp/main_second.html',
                                                              texts.USERNAME_ALREADY_USED, LoginForm(), UserCreateForm(data))
 
-            username_failure = username_failure_validate(username)
+            username_failure = user_username_failure_validate(username)
             if username_failure:
                 clue_message = None
                 if username_failure is 1:
@@ -214,7 +214,7 @@ def main_create_log_in(request):
                 return render_with_clue_loginform_createform(request, 'authapp/main_second.html',
                                                              texts.EMAIL_ALREADY_USED, LoginForm(), UserCreateForm(data))
 
-            email_failure = email_failure_validate(email)
+            email_failure = user_primary_email_failure_validate(email)
             if email_failure:
                 clue_message = None
                 if email_failure is 1:
@@ -267,7 +267,7 @@ def main_create_log_in(request):
                                     new_user_create = User.objects.create_user(
                                         username=id_number,
                                         password=new_password,
-                                        is_active=False,
+                                        is_active=True,
                                     )
 
                                 except IntegrityError as e:
@@ -286,6 +286,7 @@ def main_create_log_in(request):
                         new_user_primary_email_create = UserPrimaryEmail.objects.create(
                             user=new_user_create,
                             email=new_email,
+                            is_permitted=False,
                         )
 
                         new_user_username = UserUsername.objects.create(
@@ -434,41 +435,6 @@ def log_out(request):
         logout(request)
         return redirect(reverse('baseapp:main_create_log_in'))
 
-
-@ensure_csrf_cookie
-def username_change(request):
-    if request.method == "POST":
-        if request.is_ajax():
-            if request.POST['username']:
-                try:
-                    with transaction.atomic():
-                        new_username = request.POST['username']
-                        new_username = new_username.lower()
-                        exist_user_username = UserUsername.objects.filter(username=new_username).exists()
-                        if exist_user_username is not None:
-                            return clue_json_response(0, texts.USERNAME_ALREADY_USED)
-                        username_failure = username_failure_validate(new_username)
-
-                        if username_failure:
-                            clue_message = None
-                            if username_failure is 1:
-                                clue_message = texts.USERNAME_UNAVAILABLE
-                            elif username_failure is 2:
-                                clue_message = texts.USERNAME_LENGTH_PROBLEM
-                            elif username_failure is 3:
-                                clue_message = texts.USERNAME_8_CANNOT_DIGITS
-                            elif username_failure is 4:
-                                clue_message = texts.USERNAME_BANNED
-
-                            return clue_json_response(0, clue_message)
-                        user = request.user
-                        user_username = user.userusername
-                        user_username.username = new_username
-                        user_username.save()
-                        return clue_json_response(1, texts.USERNAME_CHANGED)
-
-                except Exception:
-                    return clue_json_response(0, texts.UNEXPECTED_ERROR)
 
 
 @ensure_csrf_cookie
@@ -627,7 +593,7 @@ def primary_email_key_confirm(request, uid, token):
                 # 만약 그 사이에 누군가 UserVerifiedEmail 등록해버렸다면 그 때 primary 이메일도 삭제할 것이므로 괜찮다.
                 # 결국 이 전에 return 되어 여기까지 오지도 않을 것이다.
                 user_primary_email.email = user_primary_email_auth_token.email
-                user.is_active = True
+                user_primary_email.is_permitted = True
                 user_primary_email.save()
 
                 user.save()
@@ -848,6 +814,9 @@ def password_reset_key_confirm(request, uid, token):
                                                          clue_message, PasswordResetConfirmForm())
                     user.set_password(new_password)
                     user.save()
+
+                    user_primary_email.is_permitted = True
+                    user_primary_email.save()
                     update_session_auth_hash(request, user)
                     return render(request, 'authapp/password_reset_completed.html')
 
@@ -930,6 +899,7 @@ def settings(request):
             return redirect(reverse('baseapp:main_create_log_in'))
 
 
+@ensure_csrf_cookie
 def email_ask(request):
     if request.method == "POST":
         if request.user.is_authenticated:
@@ -950,6 +920,8 @@ def email_ask(request):
                     else:
                         return JsonResponse({'res': 0})
         return JsonResponse({'res': 2})
+
+
 
 def crop(request):
     if request.method == "GET":
