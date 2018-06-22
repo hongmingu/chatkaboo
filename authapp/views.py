@@ -297,6 +297,9 @@ def main_create_log_in(request):
                             user=new_user_create,
                             name=new_name
                         )
+                        new_user_photo = UserPhoto.objects.create(
+                            user=new_user_create,
+                        )
 
                 except Exception:
                     return render_with_clue_loginform_createform(request, 'authapp/main_second.html',
@@ -404,7 +407,9 @@ def main_create_log_in(request):
                                 user_delete = None
                             if user_delete is not None:
                                 user_delete.delete()
-
+                            if user.is_active is False:
+                                user.is_active = True
+                                user.save()
                             login(request, user)
 
                             ####################################################
@@ -424,6 +429,8 @@ def main_create_log_in(request):
                                                                  UserCreateForm())
 
     else:
+        if request.user.is_authenticated:
+            return redirect(reverse('baseapp:user_main', kwargs={'user_username': request.user.userusername.username}))
         return render_with_clue_loginform_createform(request, 'authapp/main_first.html', None, LoginForm(), UserCreateForm())
 
 
@@ -434,130 +441,6 @@ def log_out(request):
     else:
         logout(request)
         return redirect(reverse('baseapp:main_create_log_in'))
-
-
-
-@ensure_csrf_cookie
-def primary_email_change(request):
-    if request.method == "POST":
-        if request.is_ajax():
-            if request.POST['email']:
-                new_email = request.POST['email']
-
-                user_primary_email_exists = UserPrimaryEmail.objects.filter(Q(email=new_email)).exists()
-                if user_primary_email_exists:
-                    return clue_json_response(0, texts.EMAIL_ALREADY_USED)
-
-                user = request.user
-
-                checker_while_loop = 0
-                counter_if_loop = 0
-                uid = None
-                token = None
-                while checker_while_loop is 0:
-                    if counter_if_loop <= 9:
-
-                        try:
-                            uid = urlsafe_base64_encode(force_bytes(user.pk)).decode()
-                            token = account_activation_token.make_token(user)
-                            print(str(token))
-                            UserPrimaryEmailAuthToken.objects.create(
-                                user_primary_email=user.userprimaryemail,
-                                uid=uid,
-                                token=token,
-                                email=new_email,
-                            )
-
-                        except IntegrityError as e:
-                            if 'UNIQUE constraint' in str(e.args):
-                                counter_if_loop = counter_if_loop + 1
-                            else:
-                                return render_with_clue_one_form(request, 'authapp/password_reset.html',
-                                                                 texts.UNEXPECTED_ERROR, PasswordResetForm())
-                    checker_while_loop = 1
-
-                subject = '[' + texts.SITE_NAME + ']' + texts.EMAIL_CONFIRMATION_SUBJECT
-
-                message = render_to_string('authapp/_user_password_reset_key.html', {
-                    'username': user.userusername.username,
-                    'name': user.usertextname.name,
-                    'email': new_email,
-                    'domain': texts.SITE_DOMAIN,
-                    'site_name': texts.SITE_NAME,
-                    'uid': uid,
-                    'token': token,
-                })
-
-                email_list = [new_email]
-
-                send_mail(
-                    subject=subject, message=message, from_email=options.DEFAULT_FROM_EMAIL,
-                    recipient_list=email_list
-                )
-
-                return clue_json_response(1, texts.EMAIL_ADDED_SENT)
-
-
-@ensure_csrf_cookie
-def primary_email_key_send(request):
-    if request.method == 'POST':
-        if request.is_ajax():
-            if request.POST['email']:
-                email = request.POST['email']
-
-                try:
-                    user_primary_email = UserPrimaryEmail.objects.get(email=email, user=request.user)
-                except UserPrimaryEmail.DoesNotExist:
-                    return clue_json_response(0, texts.EMAIL_NOT_EXIST)
-
-                user = request.user
-
-                # Start to make token
-                checker_while_loop = 0
-                counter_if_loop = 0
-                uid = None
-                token = None
-
-                while checker_while_loop is 0:
-                    if counter_if_loop <= 9:
-
-                        try:
-                            uid = urlsafe_base64_encode(force_bytes(user.pk)).decode()
-                            token = account_activation_token.make_token(user)
-
-                            UserPrimaryEmailAuthToken.objects.create(
-                                user_unverified_email=user_primary_email,
-                                uid=uid,
-                                token=token,
-                            )
-                        except IntegrityError as e:
-                            if 'UNIQUE constraint' in str(e.args):
-                                counter_if_loop = counter_if_loop + 1
-                            else:
-                                return clue_json_response(0, texts.CREATING_EMAIL_EXTRA_ERROR)
-                    checker_while_loop = 1
-
-                # Send Email
-
-                subject = '[' + texts.SITE_NAME + ']' + texts.EMAIL_CONFIRMATION_SUBJECT
-                message = render_to_string('authapp/_user_primary_email_key.html', {
-                    'username': user.userusername.username,
-                    'name': user.usertextname.name,
-                    'email': user_primary_email.email,
-                    'domain': texts.SITE_DOMAIN,
-                    'site_name': texts.SITE_NAME,
-                    'uid': uid,
-                    'token': token,
-                })
-
-                email_list = [email]
-
-                send_mail(
-                    subject=subject, message=message, from_email=options.DEFAULT_FROM_EMAIL,
-                    recipient_list=email_list
-                )
-
-                return clue_json_response(1, texts.EMAIL_ADDED_SENT)
 
 
 def primary_email_key_confirm(request, uid, token):
@@ -872,6 +755,8 @@ def delete_user(request):
                     try:
                         with transaction.atomic():
                             UserDelete.objects.create(user=user)
+                            user.is_active = False
+                            user.save()
                             logout(request)
                             return render(request, 'authapp/delete_user_done.html')
                     except Exception:
@@ -898,6 +783,12 @@ def settings(request):
         else:
             return redirect(reverse('baseapp:main_create_log_in'))
 
+def settings_other(request):
+    if request.method == "GET":
+        if request.user.is_authenticated:
+            return render(request, 'authapp/settings_other.html')
+        else:
+            return redirect(reverse('baseapp:main_create_log_in'))
 
 @ensure_csrf_cookie
 def email_ask(request):
@@ -922,18 +813,42 @@ def email_ask(request):
         return JsonResponse({'res': 2})
 
 
+'''
 
+'''
 def crop(request):
     if request.method == "GET":
 
-        form = TestPhotoFrom()
-        return render(request, 'authapp/crop.html', {'form': form})
+        form = TestPicForm()
+
+        testphoto = TestPic.objects.all().last()
+
+        return render(request, 'authapp/crop.html', {'form': form, 'testphoto': testphoto})
     else:
         if request.is_ajax():
-            form = TestPhotoFrom(request.POST, request.FILES)
+            testpic = TestPic.objects.get(pk=1)
+
+            form = TestPicForm(request.POST, request.FILES, instance=testpic)
             if form.is_valid():
-                form.save()
-                return JsonResponse({'success': 'file_uploaded with: ' + 'on form_valid'})
+                from PIL import Image
+                from django.core.files import File
+                from io import BytesIO
+                # form.save()
+                data = request.FILES['file']
+                input_file = BytesIO(data.read())
+                image_crop = Image.open(input_file)
+                # image_crop = Image.open(request.FILES['file'])
+                print('2')
+                image_crop = image_crop.crop((1,1,10,10))
+                image_crop = image_crop.resize((100, 100), Image.ANTIALIAS)
+                image_file = BytesIO()
+                image_crop.save(image_file, 'JPEG')
+                data.file = image_file
+                testpic.file = data
+                testpic.save()
+                print('3')
+
+
+                return JsonResponse({'success': 'file_uploaded with: ' + 'on form_valid', 'url': 'maybe'})
 
             return JsonResponse({'success': 'file_uploaded with: ' + 'failed form_valid'})
-
