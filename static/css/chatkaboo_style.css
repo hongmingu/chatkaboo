@@ -253,3 +253,37 @@
         .email_token_resend{
             border: 1px solid red;
         }
+
+        .loader {
+  border: 2px solid;
+  border-radius: 20%;
+  border-top: 2px solid;
+  width: 20px;
+  height: 20px;
+  -webkit-animation: spin 2s linear infinite; /* Safari */
+  animation: spin 2s linear infinite;
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.display_inline_block{
+    display: inline-block;
+}
+.margin_top_50 {
+    margin-top: 50px;
+}
+.padding_0 {
+    padding: 0px;
+}
+.max_width_100p{
+    max-width: 100%;
+}

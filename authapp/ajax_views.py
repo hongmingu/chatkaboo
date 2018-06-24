@@ -2,6 +2,8 @@ import json
 import urllib
 from urllib.parse import urlparse
 
+from PIL import Image
+from io import BytesIO
 from django.conf import settings
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.models import User
@@ -59,7 +61,7 @@ def re_settings(request):
                         except Exception:
                             return JsonResponse({'res': 0, 'message': texts.UNEXPECTED_ERROR})
 
-                        return JsonResponse({'res': 1, 'name': escape(new_user_text_name)})
+                        return JsonResponse({'res': 1, 'message': texts.USER_TEXT_NAME_CHANGED, 'name': escape(new_user_text_name)})
 
                 elif request.POST.get('command', None) == 'username':
                     new_user_username = request.POST.get('username', None)
@@ -92,7 +94,7 @@ def re_settings(request):
                         except Exception:
                             return JsonResponse({'res': 0, 'message': texts.UNEXPECTED_ERROR})
 
-                        return JsonResponse({'res': 1, 'username': escape(new_user_username)})
+                        return JsonResponse({'res': 1, 'message': texts.USERNAME_CHANGED, 'username': escape(new_user_username)})
 
                 elif request.POST.get('command', None) == 'email':
                     new_user_primary_email = request.POST.get('email', None)
@@ -158,41 +160,111 @@ def re_settings(request):
                             return JsonResponse({'res': 0, 'message': texts.UNEXPECTED_ERROR})
 
                         return JsonResponse({'res': 1, 'email': texts.EMAIL_SENT + ': ' + new_user_primary_email})
+
+                elif request.POST.get('command', None) == 'email_resend':
+                    new_user_primary_email = request.user.userprimaryemail.email
+                    if new_user_primary_email is not None:
+
+                        try:
+                            with transaction.atomic():
+
+                                checker_while_loop = 0
+                                counter_if_loop = 0
+                                uid = urlsafe_base64_encode(force_bytes(request.user.pk)).decode()
+                                token = account_activation_token.make_token(request.user)
+                                while checker_while_loop is 0:
+                                    if counter_if_loop <= 9:
+
+                                        try:
+                                            UserPrimaryEmailAuthToken.objects.create(
+                                                user_primary_email=request.user.userprimaryemail,
+                                                uid=uid,
+                                                token=token,
+                                                email=new_user_primary_email,
+                                            )
+                                        except IntegrityError as e:
+                                            if 'UNIQUE constraint' in str(e.args):
+                                                counter_if_loop = counter_if_loop + 1
+                                            else:
+                                                return JsonResponse(
+                                                    {'res': 0, 'message': texts.EMAIL_CONFIRMATION_EXTRA_ERROR})
+                                    checker_while_loop = 1
+
+                                subject = '[' + texts.SITE_NAME + ']' + texts.EMAIL_CONFIRMATION_SUBJECT
+
+                                message = render_to_string('authapp/_account_activation_email.html', {
+                                    'username': request.user.userusername.username,
+                                    'name': request.user.usertextname.name,
+                                    'email': new_user_primary_email,
+                                    'domain': texts.SITE_DOMAIN,
+                                    'site_name': texts.SITE_NAME,
+                                    'uid': uid,
+                                    'token': token,
+                                })
+
+                                new_user_email_list = [new_user_primary_email]
+
+                                send_mail(
+                                    subject=subject, message=message, from_email=options.DEFAULT_FROM_EMAIL,
+                                    recipient_list=new_user_email_list
+                                )
+                                # End Transaction
+                        except Exception:
+                            return JsonResponse({'res': 0, 'message': texts.UNEXPECTED_ERROR})
+
+                        return JsonResponse({'res': 1, 'email': texts.EMAIL_SENT + ': ' + new_user_primary_email})
+
         return JsonResponse({'res': 2})
 
 
 @ensure_csrf_cookie
-def username_change(request):
+def upload_user_photo(request):
     if request.method == "POST":
-        if request.is_ajax():
-            if request.POST['username']:
-                try:
-                    with transaction.atomic():
-                        new_username = request.POST['username']
-                        new_username = new_username.lower()
-                        exist_user_username = UserUsername.objects.filter(username=new_username).exists()
-                        if exist_user_username is not None:
-                            return clue_json_response(0, texts.USERNAME_ALREADY_USED)
+        if request.user.is_authenticated:
 
-                        username_failure = user_username_failure_validate(new_username)
+            if request.is_ajax():
+                if request.POST.get('remove', None) == 'remove':
+                    user_photo = UserPhoto.objects.get(user=request.user)
+                    user_photo.file = None
+                    user_photo.save()
+                    return JsonResponse({'res': 1})
+                else:
+                    form = UserPhotoForm(request.POST, request.FILES)
+                    if form.is_valid():
+                        user_photo = UserPhoto.objects.get(user=request.user)
 
-                        if username_failure:
-                            clue_message = None
-                            if username_failure is 1:
-                                clue_message = texts.USERNAME_UNAVAILABLE
-                            elif username_failure is 2:
-                                clue_message = texts.USERNAME_LENGTH_PROBLEM
-                            elif username_failure is 3:
-                                clue_message = texts.USERNAME_8_CANNOT_DIGITS
-                            elif username_failure is 4:
-                                clue_message = texts.USERNAME_BANNED
+                        data = request.FILES['file_300']
+                        x = float(request.POST['x'])
+                        y = float(request.POST['y'])
+                        width = float(request.POST['width'])
+                        height = float(request.POST['height'])
 
-                            return clue_json_response(0, clue_message)
-                        user = request.user
-                        user_username = user.userusername
-                        user_username.username = new_username
-                        user_username.save()
-                        return clue_json_response(1, texts.USERNAME_CHANGED)
+                        input_file = BytesIO(data.read())
+                        image_open = Image.open(input_file)
+                        image_crop = image_open.crop((1, 1, 200, 200))
+                        # image_crop = image_open.crop((x, y, x + width, y + height))
 
-                except Exception:
-                    return clue_json_response(0, texts.UNEXPECTED_ERROR)
+                        image_resize = image_crop.resize((300, 300), Image.ANTIALIAS)
+                        image_resize_50 = image_crop.resize((50, 50), Image.ANTIALIAS)
+
+                        image_file = BytesIO()
+                        image_resize.save(image_file, 'JPEG')
+
+                        data.file = image_file
+                        user_photo.file_300 = data
+
+                        user_photo.save()
+
+                        data.seek(0)
+                        #
+                        image_file = BytesIO()
+                        image_resize_50.save(image_file, 'JPEG')
+
+                        data.file = image_file
+                        user_photo.file_50 = data
+                        #
+                        user_photo.save()
+                        return JsonResponse({'res': 1, 'url': user_photo.file_300.url})
+
+                return JsonResponse({'res': 0, 'message': texts.UNEXPECTED_ERROR})
+

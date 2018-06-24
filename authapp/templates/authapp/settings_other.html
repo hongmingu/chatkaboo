@@ -6,8 +6,7 @@
     {% load static from staticfiles %}
     <script src="{% static 'js/navbar.js' %}"></script>
     <script src="{% static 'js/reconnecting-websocket.min.js' %}"></script>
-    <link rel="stylesheet" href="{% static 'cropper/cropper.min.css' %}">
-    <script src="{% static 'cropper/cropper.min.js' %}"></script>
+
 
 
     <link href="https://fonts.googleapis.com/css?family=Tauri" rel="stylesheet">
@@ -53,20 +52,6 @@
                             <p class="h4" style="" align="center"><span
                                     class="padding_5"
                                     style="">Account settings</span></p> <!--여기 이름, 사진, 유저네임, 이메일, 팔로우차단, 차단유저, 팔로잉공개, (글이 완성된 상황일 경우 - )팔로워공개 혹은 전체공개, 아이디검색, 이름검색, 검색허용  -->
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-xs-12">
-                            {% if user.userphoto.file %}
-                            {% else %}
-                                <div class="row" align="center">
-                                    <img src="https://www.allkpop.com/upload/2018/03/af_org/28113024/irene.jpg" style="width: 300px; height: 300px;">
-                                </div>
-
-                            {% endif %}
-                            <div class="row" align="center">
-                                <p class="h4"><a href="#"><span class="clickable padding_5 chatkaboo_background_color" id="span_change_photo">Change</span></a> <a href="#"><span class="clickable padding_5 chatkaboo_background_color">BaseReset</span></a></p>
-                            </div>
                         </div>
                     </div>
                     <div class="row">
@@ -166,215 +151,9 @@
     </div>
 </div>
 
-
-  <!-- MODAL TO CROP THE IMAGE -->
-  <div class="modal fade" id="modal_crop" data-backdrop="static">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-          <h4 class="modal-title">Crop the photo</h4>
-        </div>
-        <div class="modal-body padding_0">
-          <img src="" id="img_crop" class="max_width_100p">
-        </div>
-        <div class="modal-footer">
-          <div class="btn-group pull-left" role="group">
-            <button type="button" class="btn btn-default js-zoom-in">
-              <span class="glyphicon glyphicon-zoom-in"></span>
-            </button>
-            <button type="button" class="btn btn-default js-zoom-out">
-              <span class="glyphicon glyphicon-zoom-out"></span>
-            </button>
-          </div>
-          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-primary js-crop-and-upload">Save</button>
-        </div>
-      </div>
-    </div>
-  </div>
-<form method="post" enctype="multipart/form-data" id="form_upload">
-    <input type="file" name="file_300" required id="input_file">
-</form>
 </body>
 <script defer>
     $(function () {
-    $('#span_base_image').click(function () {
-            $.ajax({
-            url:'/re_settings/ajax/upload_user_photo/',
-            type:'post',
-            dataType:'json',
-            cache:false,
-            data:{
-                remove:'remove'
-            },
-            success:function (data) {
-                console.log(data)
-
-            }
-        });
-    });
-
-
-
-$('#span_change_photo').click(function (e) {
-   e.preventDefault();
-   $('#input_file').click()
-});
-var input_file;
-      $('#input_file').change(function () {
-        if (this.files && this.files[0]) {
-            input_file = $(this);
-            if(this.files[0].size > (1048576 * 10)) {
-                this.value = "";
-                alert('File size can\'t exceed 10m');
-                return;
-            }
-          var reader = new FileReader();
-          reader.onload = function (e) {
-            $("#img_crop").attr("src", e.target.result);
-            $("#modal_crop").modal("show");
-          };
-          reader.readAsDataURL(this.files[0]);
-        }
-      });
-
-      /* SCRIPTS TO HANDLE THE CROPPER BOX */
-    var image;
-      var cropper
-      $("#modal_crop").on("shown.bs.modal", function () {
-          image = document.getElementById('img_crop');
-          cropper = new Cropper(image, {
-                viewMode: 2,
-                minCropBoxWidth: 300,
-                minCropBoxHeight: 300,
-                aspectRatio: 1/1,
-          });
-
-      }).on("hidden.bs.modal", function () {
-        cropper.destroy();
-        input_file.value = "";
-      });
-
-      $(".js-zoom-in").click(function () {
-        cropper.zoom(0.1);
-      });
-
-      $(".js-zoom-out").click(function () {
-        cropper.zoom(-0.1);
-
-      });
-
-      /* SCRIPT TO COLLECT THE DATA AND POST TO THE SERVER
-       * 모달 오픈시 너무 큰 그림이면 로딩하는 시간 주는 거 구현하고, 세이브 후 기다리는거 구현하고 체인지 안 되었어도 모달 꺼지면 디스트로이 하게 구현하라. */
-      $(".js-crop-and-upload").click(function () {
-        var cropData = cropper.getData();
-
-        var form_file = $('#form_upload')[0];
-        var form_data = new FormData(form_file);
-        console.log(form_file)
-        form_data.append('x', cropData["x"]);
-        form_data.append('y', cropData["y"]);
-        form_data.append('height', cropData["height"]);
-        form_data.append('width', cropData["width"]);
-        console.log(form_data)
-        $.ajax({
-            url:'/re_settings/ajax/upload_user_photo/',
-            type:'post',
-            dataType:'json',
-            cache:false,
-            processData: false,
-            contentType: false,
-            data:form_data,
-            success:function (data) {
-                console.log(data)
-                $("#modal_crop").modal("hide");
-            }
-        });
-      });
-
-/*
-var _form_upload = $('<form method="post" enctype="multipart/form-data" id="form_upload">\n' +
-                '      <input type="file" name="file_300" required id="input_file">\n' +
-                '  </form>');
-$('#span_change_photo').click(function (e) {
-   e.preventDefault();
-   _form_upload.find('#input_file').click()
-});
-var input_file;
-      _form_upload.find('#input_file').change(function () {
-        if (this.files && this.files[0]) {
-            input_file = $(this);
-            if(this.files[0].size > (1048576 * 10)) {
-                this.value = "";
-                alert('File size can\'t exceed 10m');
-                return;
-            }
-          var reader = new FileReader();
-          reader.onload = function (e) {
-            $("#img_crop").attr("src", e.target.result);
-            $("#modal_crop").modal("show");
-          };
-          reader.readAsDataURL(this.files[0]);
-        }
-      });
-
-    var image;
-      var cropper
-      $("#modal_crop").on("shown.bs.modal", function () {
-          image = document.getElementById('img_crop');
-          cropper = new Cropper(image, {
-                viewMode: 2,
-                minCropBoxWidth: 300,
-                minCropBoxHeight: 300,
-                aspectRatio: 1/1,
-          });
-
-      }).on("hidden.bs.modal", function () {
-        cropper.destroy();
-        input_file.value = "";
-      });
-
-      $(".js-zoom-in").click(function () {
-        cropper.zoom(0.1);
-      });
-
-      $(".js-zoom-out").click(function () {
-        cropper.zoom(-0.1);
-
-      });
-
-      $(".js-crop-and-upload").click(function () {
-        var cropData = cropper.getData();
-
-        var form_file = _form_upload.find('#form_upload')[0];
-        var form_data = new FormData(form_file);
-        console.log(form_file)
-        form_data.append('x', cropData["x"]);
-        form_data.append('y', cropData["y"]);
-        form_data.append('height', cropData["height"]);
-        form_data.append('width', cropData["width"]);
-        console.log(form_data)
-        $.ajax({
-            url:'/re_settings/ajax/upload_user_photo/',
-            type:'post',
-            dataType:'json',
-            cache:false,
-            processData: false,
-            contentType: false,
-            data:form_data,
-            success:function (data) {
-                console.log(data)
-                $("#modal_crop").modal("hide");
-            }
-        });
-      });
-*/
-
-
-
     var val_name, val_username, val_email;
 
         $('#span_name').click(function (e) {

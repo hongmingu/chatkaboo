@@ -57,7 +57,19 @@
                                     style="">Account settings</span></a></p> <!--여기 이름, 사진, 유저네임, 이메일, 팔로우차단, 차단유저, 팔로잉공개, (글이 완성된 상황일 경우 - )팔로워공개 혹은 전체공개, 아이디검색, 이름검색, 검색허용  -->
                         </div>
                     </div>
+                    <div class="row">
+                        {% if testphoto.file %}
+                        <img id="profile_img" src="{{ testphoto.file.url }}">
+                        {% else %}
+                        <div style="background-color: #00aced; height: 30px; width: 200px"></div>
+                        {% endif %}
 
+                    </div>
+                    <div class="row">
+                        <p class="h4" style="" align="center"><a href="#"><span id="span_base_image"
+                                    class="clickable padding_5 chatkaboo_background_color"
+                                    style="">base image</span></a></p>
+                    </div>
 
                 </div>
 
@@ -106,14 +118,7 @@
     </div>
   </div>
 
-  <!-- CONTAINER TO DISPLAY THE CROPPED IMAGES -->
-  <div class="row" style="margin-top: 20px">
-    {% for photo in photos %}
-      <div class="col-sm-4 col-md-3">
-        <img src="{{ photo.file.url }}" class="thumbnail">
-      </div>
-    {% endfor %}
-  </div>
+
 
 {% endblock %}
 
@@ -121,11 +126,27 @@
 {% block javascript %}
   <script>
     $(function () {
+        $('#span_base_image').click(function () {
+            $.ajax({
+            url:'/accounts/crop/',
+            type:'post',
+            dataType:'json',
+            cache:false,
+            data:{
+                base:'base'
+            },
+            success:function (data) {
+                console.log(data)
 
+            }
+        });
+        })
+var input_file;
       /* SCRIPT TO OPEN THE MODAL WITH THE PREVIEW */
       $("#id_file").change(function () {
         if (this.files && this.files[0]) {
-            if(this.files[0].size > (1048576 * 10){
+            input_file = $(this)
+            if(this.files[0].size > (1048576 * 10)) {
                 this.value = "";
                 return;
             }
@@ -148,9 +169,19 @@
                 minCropBoxWidth: 50,
                 minCropBoxHeight: 50,
                 aspectRatio: 1/1,
+                crop: function (event) {
+                    console.log(event.detail.x)
+                    console.log(event.detail.y)
+                    console.log(event.detail.rotate)
+                    console.log(event.detail.width)
+                    console.log(event.detail.height)
+
+                }
+
           });
 
       }).on("hidden.bs.modal", function () {
+          input_file.value = "";
         cropper.destroy();
       });
 
@@ -172,12 +203,16 @@
         $("#id_width").val(cropData["width"]);
 
         var form_upload = $("#formUpload")[0];
+        console.log(form_upload)
         var form_data = new FormData(form_upload);
 
         form_data.append('x', cropData["x"]);
         form_data.append('y', cropData["y"]);
         form_data.append('height', cropData["height"]);
         form_data.append('width', cropData["width"]);
+        form_data.append('rotate', cropData["rotate"]);
+
+        console.log('x: '+cropData["x"]+'y: '+cropData["y"]+'width: '+cropData["width"]+'height: '+cropData["height"])
 
         $.ajax({
             url:'/accounts/crop/',

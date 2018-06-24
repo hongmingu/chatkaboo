@@ -7,7 +7,7 @@ from authapp.models import UserUsername, UserPrimaryEmail
 from PIL import Image
 from django.core.files import File
 from .models import UserPhoto
-from .models import TestPhoto
+
 
 class UserCreateForm(forms.ModelForm):
 
@@ -106,7 +106,7 @@ class PasswordChangeWithUserPKForm(forms.Form):
         fields = ['pk', 'password']
 
 
-class UserPhotoFrom(forms.ModelForm):
+class UserPhotoForm(forms.ModelForm):
     x = forms.FloatField(widget=forms.HiddenInput())
     y = forms.FloatField(widget=forms.HiddenInput())
     width = forms.FloatField(widget=forms.HiddenInput())
@@ -114,70 +114,42 @@ class UserPhotoFrom(forms.ModelForm):
 
     class Meta:
         model = UserPhoto
-        fields = ('file', 'x', 'y', 'width', 'height', )
+        fields = ('file_300', 'x', 'y', 'width', 'height', )
 
-    def save(self):
-        user_photo = super(UserPhotoFrom, self).save()
-
-        x = self.cleaned_data.get('x')
-        y = self.cleaned_data.get('y')
-        w = self.cleaned_data.get('width')
-        h = self.cleaned_data.get('height')
-
-        image = Image.open(user_photo.file)
-        cropped_image = image.crop((x, y, w+x, h+y))
-        resized_image = cropped_image.resize((200, 200), Image.ANTIALIAS)
-        resized_image.save(user_photo.file.path)
-
-        return user_photo
-
-
-class UserPhotoFrom(forms.ModelForm):
+class TestPicForm(forms.ModelForm):
     x = forms.FloatField(widget=forms.HiddenInput())
     y = forms.FloatField(widget=forms.HiddenInput())
     width = forms.FloatField(widget=forms.HiddenInput())
     height = forms.FloatField(widget=forms.HiddenInput())
+    rotate = forms.FloatField(widget=forms.HiddenInput())
 
     class Meta:
-        model = UserPhoto
-        fields = ('file', 'x', 'y', 'width', 'height', )
+        from .models import TestPic
+        model = TestPic
+        fields = ('file', 'file_50', 'x', 'y', 'width', 'height', 'rotate', )
 
     def save(self):
-        user_photo = super(UserPhotoFrom, self).save()
-
+        user_photo = super(TestPicForm, self).save()
         x = self.cleaned_data.get('x')
         y = self.cleaned_data.get('y')
-        w = self.cleaned_data.get('width')
-        h = self.cleaned_data.get('height')
+        width = self.cleaned_data.get('width')
+        height = self.cleaned_data.get('height')
+        rotate = self.cleaned_data.get('rotate')
+        print('x: ' + str(x) + 'y: ' + str(y) + 'rotate: ' + str(rotate) +'width: ' + str(width)+'height: ' + str(height))
+        file = user_photo.file
+        image = Image.open(file)
+        fill_color = 'red'  # your background
+        if image.mode in ('RGBA', 'LA'):
+            background = Image.new(image.mode[:-1], image.size, fill_color)
+            background.paste(image, image.split()[-1])
+            image = background
+        # image_50 = Image.open(user_photo.file_50)
+        cropped_image = image.rotate(-1*rotate, expand=True)
+        cropped_image = cropped_image.crop((x, y, x + width, y + height)).resize((300, 300), Image.ANTIALIAS)
+        cropped_50_image = image.rotate(rotate).crop((x, y, x + width, y + height)).resize((50, 50), Image.ANTIALIAS)
+        cropped_image.save(user_photo.file.path)
+        file.seek(0)
 
-        image = Image.open(user_photo.file)
-        cropped_image = image.crop((x, y, w+x, h+y))
-        resized_image = cropped_image.resize((200, 200), Image.ANTIALIAS)
-        resized_image.save(user_photo.file.path)
+        cropped_50_image.save(user_photo.file_50.path)
 
         return user_photo
-
-
-class TestPhotoFrom(forms.ModelForm):
-    x = forms.FloatField(widget=forms.HiddenInput())
-    y = forms.FloatField(widget=forms.HiddenInput())
-    width = forms.FloatField(widget=forms.HiddenInput())
-    height = forms.FloatField(widget=forms.HiddenInput())
-
-    class Meta:
-        model = TestPhoto
-        fields = ('file', 'x', 'y', 'width', 'height', )
-
-    def save(self):
-        test_photo = super(TestPhotoFrom, self).save()
-        x = self.cleaned_data.get('x')
-        y = self.cleaned_data.get('y')
-        w = self.cleaned_data.get('width')
-        h = self.cleaned_data.get('height')
-
-        image = Image.open(test_photo.file)
-        cropped_image = image.crop((x, y, x + w, y + h))
-        resized_image = cropped_image.resize((100, 100), Image.ANTIALIAS)
-        resized_image.save(test_photo.file.path)
-
-        return test_photo

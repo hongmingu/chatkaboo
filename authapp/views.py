@@ -830,25 +830,61 @@ def crop(request):
 
             form = TestPicForm(request.POST, request.FILES, instance=testpic)
             if form.is_valid():
-                from PIL import Image
-                from django.core.files import File
-                from io import BytesIO
-                # form.save()
-                data = request.FILES['file']
-                input_file = BytesIO(data.read())
-                image_crop = Image.open(input_file)
-                # image_crop = Image.open(request.FILES['file'])
-                print('2')
-                image_crop = image_crop.crop((1,1,10,10))
-                image_crop = image_crop.resize((100, 100), Image.ANTIALIAS)
-                image_file = BytesIO()
-                image_crop.save(image_file, 'JPEG')
-                data.file = image_file
-                testpic.file = data
-                testpic.save()
-                print('3')
-
+                form.save()
 
                 return JsonResponse({'success': 'file_uploaded with: ' + 'on form_valid', 'url': 'maybe'})
-
             return JsonResponse({'success': 'file_uploaded with: ' + 'failed form_valid'})
+
+
+# form.save()
+def crop_request_file(request_file, x, y, width, height, resize_width, resize_height):
+    from PIL import Image
+    from io import BytesIO
+    read_file = BytesIO(request_file.read())
+    image = Image.open(read_file)
+    image = image.crop((x, y, x+width, y+height))
+    image = image.resize((resize_width, resize_height), Image.ANTIALIAS)
+    image_file = BytesIO()
+    image.save(image_file, 'JPEG')
+    request_file.file = image_file
+    return request_file
+
+
+'''
+                from PIL import Image
+                from io import BytesIO
+                # form.save()
+
+                data = request.FILES['file']
+                print('1')
+                input_file = BytesIO(data.read())
+                image_crop = Image.open(input_file)
+                print('2')
+                data.seek(0)
+                print('3')
+                image_crop = image_crop.crop((1, 1, 100, 100))
+                print('4')
+                image_resize = image_crop.resize((300, 300), Image.ANTIALIAS)
+
+                image_file = BytesIO()
+                image_resize.save(image_file, 'JPEG')
+
+                data.file = image_file
+                testpic.file = data
+
+                testpic.save()
+                print('3')
+                data.seek(0)
+
+                data = request.FILES['file']
+                input_file = BytesIO(data.read())
+                input_file = input_file.name
+                image_crop = Image.open(input_file)
+                image_crop = image_crop.crop((40, 40, 140, 140))
+                image_resize = image_crop.resize((50, 50), Image.ANTIALIAS)
+                image_file = BytesIO()
+                image_resize.save(image_file, 'JPEG')
+                data.file = image_file
+                testpic.file_50 = data
+                testpic.save()
+                '''
