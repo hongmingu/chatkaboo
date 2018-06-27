@@ -118,7 +118,8 @@
     </div>
   </div>
 
-
+<br><br><br><br><br><br>
+    <a><span id="clean">clean</span></a>
 
 {% endblock %}
 
@@ -140,7 +141,22 @@
 
             }
         });
-        })
+        });
+$('#clean').click(function () {
+    alert('hello')
+    var agent = navigator.userAgent.toLowerCase();
+
+                          if ( (navigator.appName == 'Netscape' && navigator.userAgent.search('Trident') != -1) || (agent.indexOf("msie") != -1) ){
+                // ie 일때 input[type=file] init.
+                $("#id_file").replaceWith( $("#id_file").clone(true) );
+                } else {
+                //other browser 일때 input[type=file] init.
+                $("#id_file").val("");
+                }
+})
+
+
+
 var input_file;
       /* SCRIPT TO OPEN THE MODAL WITH THE PREVIEW */
       $("#id_file").change(function () {
@@ -166,8 +182,8 @@ var input_file;
           image = document.getElementById('image');
           cropper = new Cropper(image, {
                 viewMode: 1,
-                minCropBoxWidth: 50,
-                minCropBoxHeight: 50,
+                minCropBoxWidth: 300,
+                minCropBoxHeight: 300,
                 aspectRatio: 1/1,
                 crop: function (event) {
                     console.log(event.detail.x)
@@ -181,7 +197,17 @@ var input_file;
           });
 
       }).on("hidden.bs.modal", function () {
-          input_file.value = "";
+             // var agent = navigator.userAgent.toLowerCase();
+
+    var agent = navigator.userAgent.toLowerCase();
+
+                          if ( (navigator.appName == 'Netscape' && navigator.userAgent.search('Trident') != -1) || (agent.indexOf("msie") != -1) ){
+                // ie 일때 input[type=file] init.
+                $("#id_file").replaceWith( $("#id_file").clone(true) );
+                } else {
+                //other browser 일때 input[type=file] init.
+                $("#id_file").val("");
+                }
         cropper.destroy();
       });
 
@@ -224,7 +250,16 @@ var input_file;
             data:form_data,
             success:function (data) {
                 console.log(data)
+
                 $("#modalCrop").modal("hide");
+                var agent = navigator.userAgent.toLowerCase();
+                if ( (navigator.appName == 'Netscape' && navigator.userAgent.search('Trident') != -1) || (agent.indexOf("msie") != -1) ){
+                // ie 일때 input[type=file] init.
+                $("#id_file").replaceWith( $("#id_file").clone(true) );
+                } else {
+                //other browser 일때 input[type=file] init.
+                $("#id_file").val("");
+                }
             }
         });
       });

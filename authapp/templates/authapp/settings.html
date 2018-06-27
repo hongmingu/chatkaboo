@@ -218,7 +218,6 @@
     });
 
 
-
 $('#span_change_photo').click(function (e) {
    e.preventDefault();
    $('#input_file').click()
@@ -226,9 +225,16 @@ $('#span_change_photo').click(function (e) {
 var input_file;
       $('#input_file').change(function () {
         if (this.files && this.files[0]) {
-            input_file = $(this);
             if(this.files[0].size > (1048576 * 10)) {
-                this.value = "";
+                var agent = navigator.userAgent.toLowerCase();
+
+                if ( (navigator.appName == 'Netscape' && navigator.userAgent.search('Trident') != -1) || (agent.indexOf("msie") != -1) ){
+                    // ie 일때 input[type=file] init.
+                    $('#input_file').find("#id_file").replaceWith( $('#input_file').find("#id_file").clone(true) );
+                    } else {
+                    //other browser 일때 input[type=file] init.
+                    $('#input_file').find("#id_file").val("");
+                }
                 alert('File size can\'t exceed 10m');
                 return;
             }
@@ -255,8 +261,16 @@ var input_file;
 
       }).on("hidden.bs.modal", function () {
         cropper.destroy();
-        input_file.value = "";
-      });
+        var agent = navigator.userAgent.toLowerCase();
+
+        if ( (navigator.appName == 'Netscape' && navigator.userAgent.search('Trident') != -1) || (agent.indexOf("msie") != -1) ){
+            // ie 일때 input[type=file] init.
+            $('#input_file').find("#id_file").replaceWith( $('#input_file').find("#id_file").clone(true) );
+        } else {
+            //other browser 일때 input[type=file] init.
+                $('#input_file').find("#id_file").val("");
+        }
+    });
 
       $(".js-zoom-in").click(function () {
         cropper.zoom(0.1);
@@ -274,11 +288,12 @@ var input_file;
 
         var form_file = $('#form_upload')[0];
         var form_data = new FormData(form_file);
-        console.log(form_file)
         form_data.append('x', cropData["x"]);
         form_data.append('y', cropData["y"]);
         form_data.append('height', cropData["height"]);
         form_data.append('width', cropData["width"]);
+        form_data.append('rotate', cropData["rotate"]);
+
         console.log(form_data)
         $.ajax({
             url:'/re_settings/ajax/upload_user_photo/',
@@ -291,6 +306,7 @@ var input_file;
             success:function (data) {
                 console.log(data)
                 $("#modal_crop").modal("hide");
+
             }
         });
       });

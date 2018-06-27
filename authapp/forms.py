@@ -111,10 +111,39 @@ class UserPhotoForm(forms.ModelForm):
     y = forms.FloatField(widget=forms.HiddenInput())
     width = forms.FloatField(widget=forms.HiddenInput())
     height = forms.FloatField(widget=forms.HiddenInput())
+    rotate = forms.FloatField(widget=forms.HiddenInput())
 
     class Meta:
         model = UserPhoto
-        fields = ('file_300', 'x', 'y', 'width', 'height', )
+        fields = ('file_300', 'file_50', 'x', 'y', 'width', 'height', 'rotate',)
+
+    def save(self):
+        user_photo = super(UserPhotoForm, self).save()
+        x = self.cleaned_data.get('x')
+        y = self.cleaned_data.get('y')
+        width = self.cleaned_data.get('width')
+        height = self.cleaned_data.get('height')
+        rotate = self.cleaned_data.get('rotate')
+
+        file = user_photo.file_300
+        image = Image.open(file)
+        fill_color = '#ffffff'  # your background
+        if image.mode in ('RGBA', 'LA'):
+            background = Image.new(image.mode[:-1], image.size, fill_color)
+            background.paste(image, image.split()[-1])
+            image = background
+        # image_50 = Image.open(user_photo.file_50)
+
+        rotated_image = image.rotate(-1*rotate, expand=True)
+
+        cropped_image_300 = rotated_image.crop((x, y, x + width, y + height)).resize((300, 300), Image.ANTIALIAS)
+        cropped_image_50 = rotated_image.crop((x, y, x + width, y + height)).resize((50, 50), Image.ANTIALIAS)
+
+        cropped_image_300.save(user_photo.file_300.path)
+        file.seek(0)
+        cropped_image_50.save(user_photo.file_50.path)
+
+        return user_photo
 
 class TestPicForm(forms.ModelForm):
     x = forms.FloatField(widget=forms.HiddenInput())
@@ -127,7 +156,7 @@ class TestPicForm(forms.ModelForm):
         from .models import TestPic
         model = TestPic
         fields = ('file', 'file_50', 'x', 'y', 'width', 'height', 'rotate', )
-
+'''
     def save(self):
         user_photo = super(TestPicForm, self).save()
         x = self.cleaned_data.get('x')
@@ -144,12 +173,64 @@ class TestPicForm(forms.ModelForm):
             background.paste(image, image.split()[-1])
             image = background
         # image_50 = Image.open(user_photo.file_50)
-        cropped_image = image.rotate(-1*rotate, expand=True)
-        cropped_image = cropped_image.crop((x, y, x + width, y + height)).resize((300, 300), Image.ANTIALIAS)
-        cropped_50_image = image.rotate(rotate).crop((x, y, x + width, y + height)).resize((50, 50), Image.ANTIALIAS)
+        rotated_image = image.rotate(-1*rotate, expand=True)
+        cropped_image = rotated_image.crop((x, y, x + width, y + height)).resize((300, 300), Image.ANTIALIAS)
+        # cropped_50_image = rotated_image.crop((x, y, x + width, y + height)).resize((50, 50), Image.ANTIALIAS)
         cropped_image.save(user_photo.file.path)
-        file.seek(0)
+        print(user_photo.file.path)
 
-        cropped_50_image.save(user_photo.file_50.path)
+        # def create_thumbnail(self):
+        #     # If there is no image associated with this.
+        #     # do not create thumbnail
+        #     if not self.file:
+        #         return
+        #
+        #     # Set our max thumbnail size in a tuple (max width, max height)
+        #     THUMBNAIL_SIZE = (50, 50)
+        #
+        #     DJANGO_TYPE = self.file.file.content_type
+        #     print(DJANGO_TYPE)
+        #
+        #     if DJANGO_TYPE == 'image/jpeg':
+        #         PIL_TYPE = 'jpeg'
+        #         FILE_EXTENSION = 'jpg'
+        #     elif DJANGO_TYPE == 'image/png':
+        #         PIL_TYPE = 'png'
+        #         FILE_EXTENSION = 'png'
+        #     elif DJANGO_TYPE == 'image/gif':
+        #         PIL_TYPE = 'gif'
+        #         FILE_EXTENSION = 'gif'
+        #     from io import BytesIO
+        #     from PIL import Image
+        #     from django.core.files.uploadedfile import SimpleUploadedFile
+        #     import os
+        #     # Open original photo which we want to thumbnail using PIL's Image
+        #     image = Image.open(BytesIO(self.file.read()))
+        #
+        #     # use our PIL Image object to create the thumbnail, which already
+        #     image.resize((50, 50), Image.ANTIALIAS)
+        #
+        #     # Save the thumbnail
+        #     temp_handle = BytesIO()
+        #     image.save(temp_handle, PIL_TYPE)
+        #     temp_handle.seek(0)
+        #
+        #     # Save image to a SimpleUploadedFile which can be saved into ImageField
+        #     print(os.path.split(self.file.name)[-1])
+        #     suf = SimpleUploadedFile(os.path.split(self.file.name)[-1],
+        #                              temp_handle.read(), content_type=DJANGO_TYPE)
+        #     # Save SimpleUploadedFile into image field
+        #     print(os.path.splitext(suf.name)[0])
+        #     self.file_50.save(
+        #         '%s_thumbnail.%s' % (os.path.splitext(suf.name)[0], FILE_EXTENSION),
+        #         suf, save=False)
+
+        # file.seek(0)
+        # image = Image.open(file)
+        # rotated_image = image.rotate(-1*rotate, expand=True)
+        # cropped_50_image = rotated_image.crop((x, y, x + width, y + height)).resize((50, 50), Image.ANTIALIAS)
+        #
+        # cropped_50_image.save(user_photo.file_50.path, cropped_50_image)
 
         return user_photo
+'''

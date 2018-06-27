@@ -229,42 +229,11 @@ def upload_user_photo(request):
                     user_photo.save()
                     return JsonResponse({'res': 1})
                 else:
-                    form = UserPhotoForm(request.POST, request.FILES)
+                    user_photo = UserPhoto.objects.get(user=request.user)
+                    form = UserPhotoForm(request.POST, request.FILES, instance=user_photo)
                     if form.is_valid():
-                        user_photo = UserPhoto.objects.get(user=request.user)
-
-                        data = request.FILES['file_300']
-                        x = float(request.POST['x'])
-                        y = float(request.POST['y'])
-                        width = float(request.POST['width'])
-                        height = float(request.POST['height'])
-
-                        input_file = BytesIO(data.read())
-                        image_open = Image.open(input_file)
-                        image_crop = image_open.crop((1, 1, 200, 200))
-                        # image_crop = image_open.crop((x, y, x + width, y + height))
-
-                        image_resize = image_crop.resize((300, 300), Image.ANTIALIAS)
-                        image_resize_50 = image_crop.resize((50, 50), Image.ANTIALIAS)
-
-                        image_file = BytesIO()
-                        image_resize.save(image_file, 'JPEG')
-
-                        data.file = image_file
-                        user_photo.file_300 = data
-
-                        user_photo.save()
-
-                        data.seek(0)
-                        #
-                        image_file = BytesIO()
-                        image_resize_50.save(image_file, 'JPEG')
-
-                        data.file = image_file
-                        user_photo.file_50 = data
-                        #
-                        user_photo.save()
-                        return JsonResponse({'res': 1, 'url': user_photo.file_300.url})
+                        form.save()
+                        return JsonResponse({'res': 1, 'url': form.instance.file_300.url})
 
                 return JsonResponse({'res': 0, 'message': texts.UNEXPECTED_ERROR})
 
