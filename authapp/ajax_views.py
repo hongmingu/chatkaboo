@@ -223,17 +223,85 @@ def upload_user_photo(request):
         if request.user.is_authenticated:
 
             if request.is_ajax():
+                user_photo = UserPhoto.objects.get(user=request.user)
+
                 if request.POST.get('remove', None) == 'remove':
-                    user_photo = UserPhoto.objects.get(user=request.user)
-                    user_photo.file = None
+                    user_photo.file_300 = None
+                    user_photo.file_50 = None
                     user_photo.save()
                     return JsonResponse({'res': 1})
+
                 else:
-                    user_photo = UserPhoto.objects.get(user=request.user)
                     form = UserPhotoForm(request.POST, request.FILES, instance=user_photo)
                     if form.is_valid():
-                        form.save()
-                        return JsonResponse({'res': 1, 'url': form.instance.file_300.url})
+                        user_photo = UserPhoto.objects.get(user=request.user)
+
+                        DJANGO_TYPE = request.FILES['file'].content_type
+
+                        if DJANGO_TYPE == 'image/jpeg':
+                            PIL_TYPE = 'jpeg'
+                            FILE_EXTENSION = 'jpg'
+                        elif DJANGO_TYPE == 'image/png':
+                            PIL_TYPE = 'png'
+                            FILE_EXTENSION = 'png'
+                            # DJANGO_TYPE == 'image/gif
+                        else:
+                            return JsonResponse({'res': 0, 'message': texts.UNEXPECTED_ERROR})
+
+                        from io import BytesIO
+                        from PIL import Image
+                        from django.core.files.uploadedfile import SimpleUploadedFile
+                        import os
+                        x = float(request.POST['x'])
+                        y = float(request.POST['y'])
+                        width = float(request.POST['width'])
+                        height = float(request.POST['height'])
+                        rotate = float(request.POST['rotate'])
+                        # Open original photo which we want to thumbnail using PIL's Image
+
+                        image = Image.open(BytesIO(request.FILES['file'].read()))
+                        image_modified = image.rotate(-1 * rotate, expand=True).crop((x, y, x + width, y + height))
+                        # use our PIL Image object to create the thumbnail, which already
+                        image = image_modified.resize((300, 300), Image.ANTIALIAS)
+
+                        # Save the thumbnail
+                        temp_handle = BytesIO()
+                        image.save(temp_handle, PIL_TYPE, quality=90)
+                        temp_handle.seek(0)
+
+                        # Save image to a SimpleUploadedFile which can be saved into ImageField
+                        # print(os.path.split(request.FILES['file'].name)[-1])
+                        suf = SimpleUploadedFile(os.path.split(request.FILES['file'].name)[-1],
+                                                 temp_handle.read(), content_type=DJANGO_TYPE)
+                        # Save SimpleUploadedFile into image field
+                        user_photo.file_300.save(
+                            '%s.%s' % (os.path.splitext(suf.name)[0], FILE_EXTENSION),
+                            suf, save=True)
+
+                        # request.FILES['file'].seek(0)
+                        # image = Image.open(BytesIO(request.FILES['file'].read()))
+
+                        # use our PIL Image object to create the thumbnail, which already
+                        image = image_modified.resize((50, 50), Image.ANTIALIAS)
+
+                        # Save the thumbnail
+                        temp_handle = BytesIO()
+                        image.save(temp_handle, PIL_TYPE, quality=90)
+                        temp_handle.seek(0)
+
+                        # Save image to a SimpleUploadedFile which can be saved into ImageField
+                        # print(os.path.split(request.FILES['file'].name)[-1])
+                        suf = SimpleUploadedFile(os.path.split(request.FILES['file'].name)[-1],
+                                                 temp_handle.read(), content_type=DJANGO_TYPE)
+                        # Save SimpleUploadedFile into image field
+                        # print(os.path.splitext(suf.name)[0])
+                        # user_photo.file_50.save(
+                        #     '50_%s.%s' % (os.path.splitext(suf.name)[0], FILE_EXTENSION),
+                        #     suf, save=True)
+                        user_photo.file_50.save(
+                            '%s.%s' % (os.path.splitext(suf.name)[0], FILE_EXTENSION),
+                            suf, save=True)
+                        return JsonResponse({'res': 1, 'url': user_photo.file_300.url})
 
                 return JsonResponse({'res': 0, 'message': texts.UNEXPECTED_ERROR})
 
