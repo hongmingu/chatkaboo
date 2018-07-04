@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <style>
+        .nav > li {
+        }
+        .new_span{
+            position:absolute; border-radius: 3px;
+background-color: #00aced;
+font-size: 10px; color: white;
+pointer-events: none;
+z-index: 1031;
+transform: translateX(8px) translateY(8px)
+        }
+
+    </style>
+</head>
+<body style="padding: 30px">
+
+<nav class="navbar navbar-default navbar-fixed-top" style="max-height: 50px;">
+    <div class="container-fluid" style="">
+        <ul class="nav navbar-nav" style="
+            margin-top: 0px;
+            margin-bottom: 0px;
+            padding-left: 0px;
+            max-height: 50px;">
+            <li><a class="click" id="a_home" href="#" style="padding: 15px"><i class="glyphicon glyphicon-home" id="i_home"></i></a></li>
+            <li><a class="click" id="a_chat" href="#" style="padding: 15px"><i class="glyphicon glyphicon-comment" id="i_chat"></i></a></li>
+            <li><a class="click" id="a_feed" href="#" style="padding: 15px"><i class="glyphicon glyphicon-leaf" id="i_leaf"></i></a></li>
+            <li><a class="click" id="a_user" href="#" style="padding: 15px"><i class="glyphicon glyphicon-user" id="i_user"></i></a></li>
+
+
+
+        </ul>
+    </div>
+</nav>
+
+
+<div class="container" style="margin-top: 400px;">
+    <button id="btn_push">push</button>
+</div>
+
+<span class="new_span" id="new" style="" data-u="#i_chat">30</span>
+<span class="new_span" id="newaa" style="" data-u="#i_home">20home</span>
+
+</body>
+<script>
+    $(function () {
+        var margin_top = 0;
+        $('#btn_push').click(function () {
+            console.log($('#a_home').position())
+            console.log($('#a_chat').offset())
+            console.log($('#i_chat').offset().top)
+            $("#new").css({
+   "top" : $('#i_chat').offset().top,
+   "left" : $('#i_chat').offset().left,
+});
+
+        })
+
+
+    $(function () {
+        var width = $(window).width();
+
+        $(window).on('resize', function(){
+            if($(this).width() != width){
+                width = $(this).width();
+                if(768<=width){
+                    $('.new_span').each(function () {
+                        $(this).css({
+                            'top': $($(this).attr('data-u')).offset().top,
+                            'left': $($(this).attr('data-u')).offset().left,
+                        })
+                    })
+                } else if (343<=width && width<768) {
+
+                    $('.new_span').each(function () {
+                        $(this).css({
+                            'top': $($(this).attr('data-u')).offset().top,
+                            'left': $($(this).attr('data-u')).offset().left,
+                        })
+                    })
+                } else {
+
+                    $('.new_span').each(function () {
+                        $(this).css({
+                            'top': $($(this).attr('data-u')).offset().top,
+                            'left': $($(this).attr('data-u')).offset().left,
+                        })
+                    })
+                }
+            }
+        });
+
+  // do something here
+        //$("#a_search_modal").click(function () {
+        //    $("#div_modal_search").modal();
+        //
+        //});
+    });
+
+        $('.click').click(function () {
+            alert('clicked: ' + $(this).attr('id'))
+        })
+    })
+
+</script>
+</html>
