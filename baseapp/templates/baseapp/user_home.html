@@ -92,6 +92,89 @@
         .chat_feed_title{
             font-size: 14px; font-weight: bold
         }
+        .chat_detail_others{
+            white-space:pre-wrap; word-wrap: break-word; max-width: 100%; border-radius: 5px; border: solid 1px lightgray; padding: 5px;
+        }
+        .chat_detail_others_time{
+            position: absolute;
+            font-size: 10px;
+        }
+            .chat_detail_others_wrapper{
+                padding-right:0px; padding-left:0px;
+            }
+        .chat_detail_like {
+            color: red; font-size: 10px
+        }
+        .chat_detail_form{
+            position: absolute; bottom: 30px; padding-top: 20px;
+        }
+        .chat_detail_textarea{
+            height: 50px!important;
+            resize: none;
+        }
+        .chat_detail_content{
+            overflow-y: auto
+        }
+        .chat_detail_wrapper{
+            width: 95%;
+        }
+        .chat_detail_send{
+            height: 50px!important;
+        }
+        .chat_detail_like_wrapper{
+            position: absolute; top:14px
+        }
+        chat_detail_like_wrapper_mine{
+            position: absolute; top:0px
+        }
+        .chat_detail_others_name{
+            font-size: 14px; font-weight: bold
+        }
+        .chat_detail_like_count{
+            font-size: 10px; background-color: red; color: white; border-radius: 5px
+        }
+        .margin_top_15{
+            margin-top: 15px;
+        }
+        .chat_detail_mine {
+            background-color: #2ac31b;
+            border-radius: 5px;
+            padding: 5px;
+            white-space:pre-wrap; word-wrap: break-word; max-width: 100%;
+            color: white;
+        }
+        .chat_detail_like_div_mine{
+            padding-right: 0px;
+        }
+        .margin_top_20{
+            margin-top: 20px;
+        }
+        .user_friend_title{
+            font-weight: bold; font-size: 14px;
+        }
+        .user_name{
+            font-size: 16px; font-weight: bold
+        }
+        .user_username{
+            font-size: 14px; font-weight: bold
+        }
+        .user_fellowship_title{
+            font-size: 12px; font-weight: bold
+        }
+        .user_fellowship_count{
+            font-size: 12px;
+        }
+        .user_more{
+            font-size: 12px;
+        }
+        .user_friend_name{
+            font-size: 14px;
+            word-wrap: break-word;
+        }
+        .user_change_profile{
+            font-size: 14px; font-weight: bold;
+        }
+
     </style>
 
 
@@ -114,169 +197,47 @@
     <div class="row">
         <div class="col-xs-12 col-sm-offset-3 col-sm-6 col-md-offset-4 col-md-4">
             <div class="row" id="content">
-                <div class="row div_base" id="chat_base" style="height: 400px">
-                    <div id="chat_content" style="height: 300px; overflow-y: auto">
-                    <div class="media">
-                        <div class="media-heading margin_bottom_30">
-                            <div class="col-xs-10 padding_left_0 chat_feed_title">Helywlwlsalsk</div>
-                            <div class="col-xs-2" align="right"><span
-                                    class="glyphicon glyphicon-option-horizontal grey"></span></div>
+                <div class="row div_base" id="chat_base">
+                    <div align="center">
+                        <img class="img_300_300" id="img_300" src="https://steamuserimages-a.akamaihd.net/ugc/901148415696627963/FDEB1F811010C4CC526036FC1A0B8BE94B3AC574/">
+                    </div>
+
+                    <div class="margin_top_20" align="center"><span class="user_name">트와이스</span></div>
+                    <div class="margin_top_20" align="center"><span class="user_username" style="">username_for_you</span></div>
+
+                    <div class="row margin_top_20">
+                        <div class="col-xs-6" align="right"><span class="user_fellowship_title">Following: </span><a href="#"><span class="user_fellowship_count">2001</span></a></div>
+                        <div class="col-xs-6" align="left"><span class="user_fellowship_title">Following: </span><a href="#"><span class="user_fellowship_count">2001</span></a></div>
+                    </div>
+                    <div class="margin_top_20 light_background_color" align="center">
+                        <a href="#"><span class="user_change_profile clickable">change profile</span></a>
+                    </div>
+                    <div class="margin_top_20"><span class="user_friend_title">Friend</span></div>
+                    <div class="margin_top_15">
+                        <div class="col-xs-2" align="center">
+                            <div><a href="#"><img class="img_small clickable" src="https://steamuserimages-a.akamaihd.net/ugc/901148415696627963/FDEB1F811010C4CC526036FC1A0B8BE94B3AC574/"></a></div>
+                            <div><a href="#"><span class="user_friend_name">hello</span></a></div>
                         </div>
-                        <div class="media-left">
-                            <img src="http://www.abcmartkorea.com/wp-content/uploads/2017/03/abc-youtubu-20170327.jpg"
-                                 class="media-object img_small">
+                        <div class="col-xs-2 col-xs-offset-1" align="center">
+                            <div><a href="#"><img class="img_small clickable" src="https://steamuserimages-a.akamaihd.net/ugc/901148415696627963/FDEB1F811010C4CC526036FC1A0B8BE94B3AC574/"></a></div>
+                            <div><a href="#"><span class="user_friend_name">hello</span></a></div>
                         </div>
-                        <div class="media-body">
-                            <div class="col-xs-8 chat_feed_chat"><span>Your name</span><span><b>: </b></span>Lorem
-                                ipsum...
-                            </div>
-                            <div class="col-xs-2" align="right"><span class="chat_feed_time">18/02/07</span>
-                            </div>
-                            <div class="col-xs-2" align="right"><a href="#"><span
-                                    class="chat_feed_new">new</span></a></div>
-                            <div class="col-xs-12 chat_feed_like" align="right">
-                                <a href="#"><span
-                                    class="glyphicon glyphicon-heart-empty heart chat_feed_like_icon"></span></a>
-                            </div>
+                        <div class="col-xs-2 col-xs-offset-1" align="center">
+                            <div><a href="#"><img class="img_small clickable" src="https://steamuserimages-a.akamaihd.net/ugc/901148415696627963/FDEB1F811010C4CC526036FC1A0B8BE94B3AC574/"></a></div>
+                            <div><a href="#"><span class="user_friend_name">hello</span></a></div>
                         </div>
-                        <div class="media-heading margin_bottom_30">
-                            <div class="col-xs-10 padding_left_0 chat_feed_title">Helywlwlsalsk</div>
-                            <div class="col-xs-2" align="right"><span
-                                    class="glyphicon glyphicon-option-horizontal grey"></span></div>
-                        </div>
-                        <div class="media-left">
-                            <img src="http://www.abcmartkorea.com/wp-content/uploads/2017/03/abc-youtubu-20170327.jpg"
-                                 class="media-object img_small">
-                        </div>
-                        <div class="media-body">
-                            <div class="col-xs-8 chat_feed_chat"><span>Your name</span><span><b>: </b></span>Lorem
-                                ipsum...
-                            </div>
-                            <div class="col-xs-2" align="right"><span class="chat_feed_time">18/02/07</span>
-                            </div>
-                            <div class="col-xs-2" align="right"><a href="#"><span
-                                    class="chat_feed_new">new</span></a></div>
-                            <div class="col-xs-12 chat_feed_like" align="right">
-                                <a href="#"><span
-                                    class="glyphicon glyphicon-heart-empty heart chat_feed_like_icon"></span></a>
-                            </div>
-                        </div>
-                        <div class="media-heading margin_bottom_30">
-                            <div class="col-xs-10 padding_left_0 chat_feed_title">Helywlwlsalsk</div>
-                            <div class="col-xs-2" align="right"><span
-                                    class="glyphicon glyphicon-option-horizontal grey"></span></div>
-                        </div>
-                        <div class="media-left">
-                            <img src="http://www.abcmartkorea.com/wp-content/uploads/2017/03/abc-youtubu-20170327.jpg"
-                                 class="media-object img_small">
-                        </div>
-                        <div class="media-body">
-                            <div class="col-xs-8 chat_feed_chat"><span>Your name</span><span><b>: </b></span>Lorem
-                                ipsum...
-                            </div>
-                            <div class="col-xs-2" align="right"><span class="chat_feed_time">18/02/07</span>
-                            </div>
-                            <div class="col-xs-2" align="right"><a href="#"><span
-                                    class="chat_feed_new">new</span></a></div>
-                            <div class="col-xs-12 chat_feed_like" align="right">
-                                <a href="#"><span
-                                    class="glyphicon glyphicon-heart-empty heart chat_feed_like_icon"></span></a>
-                            </div>
-                        </div>
-                        <div class="media-heading margin_bottom_30">
-                            <div class="col-xs-10 padding_left_0 chat_feed_title">Helywlwlsalsk</div>
-                            <div class="col-xs-2" align="right"><span
-                                    class="glyphicon glyphicon-option-horizontal grey"></span></div>
-                        </div>
-                        <div class="media-left">
-                            <img src="http://www.abcmartkorea.com/wp-content/uploads/2017/03/abc-youtubu-20170327.jpg"
-                                 class="media-object img_small">
-                        </div>
-                        <div class="media-body">
-                            <div class="col-xs-8 chat_feed_chat"><span>Your name</span><span><b>: </b></span>Lorem
-                                ipsum...
-                            </div>
-                            <div class="col-xs-2" align="right"><span class="chat_feed_time">18/02/07</span>
-                            </div>
-                            <div class="col-xs-2" align="right"><a href="#"><span
-                                    class="chat_feed_new">new</span></a></div>
-                            <div class="col-xs-12 chat_feed_like" align="right">
-                                <a href="#"><span
-                                    class="glyphicon glyphicon-heart-empty heart chat_feed_like_icon"></span></a>
-                            </div>
-                        </div>
-                        <div class="media-heading margin_bottom_30">
-                            <div class="col-xs-10 padding_left_0 chat_feed_title">Helywlwlsalsk</div>
-                            <div class="col-xs-2" align="right"><span
-                                    class="glyphicon glyphicon-option-horizontal grey"></span></div>
-                        </div>
-                        <div class="media-left">
-                            <img src="http://www.abcmartkorea.com/wp-content/uploads/2017/03/abc-youtubu-20170327.jpg"
-                                 class="media-object img_small">
-                        </div>
-                        <div class="media-body">
-                            <div class="col-xs-8 chat_feed_chat"><span>Your name</span><span><b>: </b></span>Lorem
-                                ipsum...
-                            </div>
-                            <div class="col-xs-2" align="right"><span class="chat_feed_time">18/02/07</span>
-                            </div>
-                            <div class="col-xs-2" align="right"><a href="#"><span
-                                    class="chat_feed_new">new</span></a></div>
-                            <div class="col-xs-12 chat_feed_like" align="right">
-                                <a href="#"><span
-                                    class="glyphicon glyphicon-heart-empty heart chat_feed_like_icon"></span></a>
-                            </div>
+                        <div class="col-xs-2 col-xs-offset-1" align="center">
+                            <div align="center"><a href="#"><span class="user_more">More</span></a></div>
                         </div>
 
                     </div>
-                        </div>
-                    <form style="position: absolute; bottom: 30px; padding-top: 20px;">
-                        <div class="input-group input-group-sm" style="width: 95%">
-                            <textarea class="form-control" style="height: 50px; resize: none;" placeholder="손채영"></textarea>
-                            <div class="input-group-btn">
-                                <button class="btn btn-default" type="submit" style="height: 50px"><i class="glyphicon glyphicon-send"></i></button>
-                            </div>
-                        </div>
-                    </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
-<div id="div_escape" style="white-space:pre-wrap; max-width: 100px;"></div> <!--pre-wrap을 써야 적절하다.-->
 
 </body>
 <script>
-$('textarea').on("keypress", function(e) {
-            /* ENTER PRESSED*/
-            if (e.keyCode == 13 && !e.shiftKey) {
-                alert('hello')
-                return false;
-            }
-        });
-
-
-</script>
-<script>
-    //if (typeof websocket_on !== "undefined") {
-    //   alert(typeof websocket_on)
-    // Works
-    //}
-    //setTimeout(function(){
-    //  alert(typeof websocket_on)
-    //}, 2000);
-    // Helpful debugging
-        var height = $(window).height();
-        $('#chat_base').css('height', height-65);
-        $('#chat_content').css('height', height-165);
-        $(window).on('resize', function(){
-            if($(this).height() != height){
-                height = $(this).height();
-
-            $('#chat_base').css('height', height-65);
-            $('#chat_content').css('height', height-165);
-
-            }
-        });
 </script>
 </html>

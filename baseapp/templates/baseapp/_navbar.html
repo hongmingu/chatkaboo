@@ -1,10 +1,13 @@
 <nav class="navbar navbar-default navbar-fixed-top navbar_base">
-    <div class="container-fluid padding_right_0">
-        <ul class="nav navbar-nav navbar_ul_base">
-            <li><a class="padding_15_i a_selected" href="#"><i class="glyphicon glyphicon-comment chatkaboo_color"></i></a></li>
-            <li><a class="padding_15_i" href="#"><i class="glyphicon glyphicon-list-alt"></i></a></li>
-            <li id="nav_div_ul_li_bsearch"><a class="padding_15_i" href="#"><i
-                    class="glyphicon glyphicon-user"></i></a></li>
+    <div class="container-fluid padding_right_0" style="">
+        <ul class="nav navbar-nav navbar_ul_base" style="">
+            <li><a class="padding_15_i" id="a_home" href="#"><i id="i_home" class="glyphicon glyphicon-home"></i></a></li>
+            <li><a class="padding_15_i" id="a_chat" href="#"><i id="i_chat" class="glyphicon glyphicon-comment"></i></a></li>
+            <li><a class="padding_15_i" id="a_feed" href="#"><i id="i_leaf" class="glyphicon glyphicon-leaf"></i></a></li>
+            <li><a class="padding_15_i" id="a_user" href="#"><i id="i_user" class="glyphicon glyphicon-user"></i></a></li>
+
+            <li id="nav_div_ul_li_bsearch"><a class="padding_15_i" id="a_note" href="#">
+                <i id="i_note" class="glyphicon glyphicon-certificate"></i></a></li>
             <li>
                 <form class="navbar-form navbar-left mobile_display_none margin_top_bottom_10">
                     <div class="input-group input-group-sm">
@@ -17,18 +20,40 @@
                 </form>
             </li>
 
-            <li class="nav_li_last_options dropdown">
-                <a href="#" class="padding_15_i dropdown-toggle" data-toggle="dropdown">
-                    <i class="glyphicon glyphicon-option-horizontal"></i>
+            <li class="nav_li_last_options desktop_display_none">
+                <a href="#" class="padding_15_i" id="nav_li_a_menu">
+                    <i class="glyphicon glyphicon-menu-down"></i>
                 </a>
-                <ul class="dropdown-menu dropdown_menu_base dropdown_menu_base_style"
-                    >
-                    <li><a href="{% url 'authapp:settings' %}">Settings</a></li>
-                    <li><a href="{% url 'authapp:log_out' %}">Log out</a></li>
-                </ul>
             </li>
-
 
         </ul>
     </div>
 </nav>
+
+<span class="nav_badge" id="badge_home" data-u="#i_home"></span>
+<span class="nav_badge" id="badge_chat" data-u="#i_chat"></span>
+<span class="nav_badge" id="badge_leaf" data-u="#i_leaf"></span>
+<span class="nav_badge" id="badge_user" data-u="#i_user"></span>
+
+<div class="modal fade" id="modal_menu">
+    <div class="modal-dialog modal-dialog_menu">
+      <div class="modal-content modal-content_menu">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body modal-body_menu">
+            <div class="row">
+              <p class="h4" align="center"><a href="{% url 'authapp:settings' %}"><span class="clickable padding_5" style="background-color: #00aced">Settings</span></a></p>
+            </div>
+            <div class="row">
+              <p class="h4" align="center"><a href="{% url 'authapp:log_out' %}"><span class="clickable padding_5" style="background-color: #00aced">Log out</span></a></p>
+            </div>
+        </div>
+        <div class="modal-footer modal-footer_menu">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
